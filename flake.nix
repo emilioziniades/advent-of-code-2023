@@ -25,7 +25,9 @@
 
             mkShellArgs = {
               shellHook = ''
-                $SHELL
+                cyan=$(tput setaf 6)
+                reset=$(tput sgr0)
+                PS1="\[$cyan\]nix\[$reset\] $PS1"
               '';
             };
 
