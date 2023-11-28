@@ -11,16 +11,11 @@ import System.Environment (getEnv)
 
 type Day = Int
 
-fetchInput :: Day -> IO String
+fetchInput :: Day -> IO ()
 fetchInput day = runReq defaultHttpConfig $ do
     loadFile defaultConfig
     token <- liftIO $ getEnv "AOC_TOKEN"
-    r <-
-        req
-            GET
-            (https "adventofcode.com" /: "2022" /: "day" /~ day /: "input")
-            NoReqBody
-            bsResponse
-            (header "Cookie" $ fromString $ "session=" ++ token)
-    BS.writeFile "test" $ responseBody r
-    liftIO $ print (responseBody r)
+    let headers = header "Cookie" $ fromString $ "session=" ++ token
+    let url = https "adventofcode.com" /: "2022" /: "day" /~ day /: "input"
+    r <- req GET url NoReqBody bsResponse headers
+    liftIO $ BS.writeFile "hellyeah.txt" $ responseBody r
