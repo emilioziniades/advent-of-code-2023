@@ -1,4 +1,4 @@
-name: ci
+name: Continuous Integration
 on: [push, pull_request]
 
 jobs:
@@ -11,15 +11,12 @@ jobs:
       - name: Set up
         uses: haskell-actions/setup@v2
         id: setup
-        # with:
-        # ghc-version: ${{ matrix.ghc-version }}
-        # Defaults, added for clarity:
-        # cabal-version: "latest"
-        # cabal-update: true
+        with:
+          ghc-version: "9.4"
+          cabal-version: "3.4"
 
       - name: Generate cache key
         run: cabal build --dry-run
-        # The last step generates dist-newstyle/cache/plan.json for the cache key.
 
       - name: Restore cached dependencies
         uses: actions/cache/restore@v3
@@ -27,10 +24,8 @@ jobs:
         with:
           path: ${{ steps.setup.outputs.cabal-store }}
           key: cabal-plan-${{ hashFiles('**/plan.json') }}
-          # restore-keys: ${{ env.key }}-
 
       - name: Install dependencies
-        # If we had an exact cache hit, the dependencies will be up to date.
         if: steps.cache.outputs.cache-hit != 'true'
         run: cabal build all --only-dependencies
 
