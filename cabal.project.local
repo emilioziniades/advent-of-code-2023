@@ -1,4 +1,9 @@
 ignore-project: False
 tests: True
+benchmarks: True
+documentation: False
 test-options: "--color=always"
 test-show-details: streaming
+
+package *
+  documentation: False
