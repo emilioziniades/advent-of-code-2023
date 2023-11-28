@@ -12,8 +12,8 @@ jobs:
         uses: haskell-actions/setup@v2
         id: setup
         with:
-          ghc-version: "latest"
-          cabal-version: "latest"
+          ghc-version: "9.4"
+          cabal-version: "3.10"
 
       - name: Generate cache key
         run: cabal build --dry-run
