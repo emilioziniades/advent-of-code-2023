@@ -22,6 +22,7 @@
                 with pkgs; [
                   cabal-install
                   haskell-language-server
+                  hlint
                   fourmolu
                 ]))
             zlib
