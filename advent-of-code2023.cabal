@@ -17,8 +17,9 @@ library
     hs-source-dirs:   src
     default-language: Haskell2010
     build-depends:
-        req >= 3.13.1,
-        dotenv >= 0.11.0
+        req >= 3.13,
+        bytestring >= 0.12,
+        dotenv >= 0.11
 
 test-suite advent-of-code2023-test
     import:            warnings

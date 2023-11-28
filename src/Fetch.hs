@@ -4,11 +4,14 @@ module Fetch (fetchInput) where
 
 import Configuration.Dotenv
 import Control.Monad.IO.Class
+import qualified Data.ByteString as BS
 import Data.String (IsString (fromString))
 import Network.HTTP.Req
 import System.Environment (getEnv)
 
-fetchInput :: Int -> IO ()
+type Day = Int
+
+fetchInput :: Day -> IO String
 fetchInput day = runReq defaultHttpConfig $ do
     loadFile defaultConfig
     token <- liftIO $ getEnv "AOC_TOKEN"
@@ -19,5 +22,5 @@ fetchInput day = runReq defaultHttpConfig $ do
             NoReqBody
             bsResponse
             (header "Cookie" $ fromString $ "session=" ++ token)
-
+    BS.writeFile "test" $ responseBody r
     liftIO $ print (responseBody r)

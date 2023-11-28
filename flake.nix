@@ -24,6 +24,10 @@
             enable = true;
 
             mkShellArgs = {
+              buildInputs = with pkgs; [
+                zlib
+              ];
+
               shellHook = ''
                 cyan=$(tput setaf 6)
                 reset=$(tput sgr0)
