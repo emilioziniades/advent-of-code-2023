@@ -1,48 +1,37 @@
 {
+  description = "Haskell development environment for Advent of Code 2023";
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    haskell-flake.url = "github:srid/haskell-flake";
+    flake-utils.url = "github:numtide/flake-utils/main";
   };
-  outputs = inputs @ {
+
+  outputs = {
     self,
     nixpkgs,
-    flake-parts,
-    ...
+    flake-utils,
   }:
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = nixpkgs.lib.systems.flakeExposed;
-      imports = [inputs.haskell-flake.flakeModule];
-
-      perSystem = {
-        self',
-        pkgs,
-        ...
-      }: {
-        haskellProjects.default = {
-          devShell = {
-            enable = true;
-
-            mkShellArgs = {
-              buildInputs = with pkgs; [
-                zlib
-              ];
-
-              shellHook = ''
-                cyan=$(tput setaf 6)
-                reset=$(tput sgr0)
-                PS1="\[$cyan\]nix\[$reset\] $PS1"
-              '';
-            };
-
-            tools = hp: {
-              fourmolu = hp.fourmolu;
-              haskell-language-server = hp.haskell-language-server;
-            };
-
-            hlsCheck.enable = true;
-          };
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in {
+        devShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            (haskellPackages.ghcWithPackages
+              (pkgs:
+                with pkgs; [
+                  cabal-install
+                  haskell-language-server
+                  fourmolu
+                ]))
+            zlib
+          ];
+          shellHook = ''
+            cyan=$(tput setaf 6)
+            reset=$(tput sgr0)
+            PS1="\[$cyan\]nix\[$reset\] $PS1"
+          '';
         };
-      };
-    };
+      }
+    );
 }
