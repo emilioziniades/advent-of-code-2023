@@ -24,9 +24,9 @@ downloadInput day = runReq defaultHttpConfig $ do
     loadFile defaultConfig
     token <- liftIO $ getEnv "AOC_TOKEN"
     let headers = header "Cookie" $ fromString $ "session=" ++ token
-    let url = https "adventofcode.com" /: "2022" /: "day" /~ day /: "input"
+    let url = https "adventofcode.com" /: "2023" /: "day" /~ day /: "input"
     r <- req GET url NoReqBody bsResponse headers
     liftIO $ BS.writeFile (inputFilename day) (responseBody r)
 
 inputFilename :: Day -> String
-inputFilename day = "input/" ++ printf "day%02d.txt" day
+inputFilename day = "input/" ++ printf "Day%02d.txt" day

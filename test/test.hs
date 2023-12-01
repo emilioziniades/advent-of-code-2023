@@ -1,19 +1,27 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 
+import Day01
+import Fetch
+
 main :: IO ()
 main = defaultMain tests
 
 tests :: TestTree
-tests = testGroup "Tests" [unitTests]
-
-unitTests :: TestTree
-unitTests =
+tests =
     testGroup
-        "Unit tests"
-        [ testCase "List comparison (different length)" $
-            [1, 2, 3] `compare` [1, 2] @?= GT
-        , -- the following test does not hold
-          testCase "List comparison (same length)" $
-            [1, 2, 3] `compare` [1, 2, 4] @?= LT
+        "Tests"
+        [ testGroup
+            "Day 1"
+            [ testGroup
+                "Part 1"
+                [ testCase "Example" $ do
+                    actual <- sumCalibrationValues "example/Day01.txt"
+                    actual @?= 142
+                , testCase "Input" $ do
+                    getInput 1
+                    actual <- sumCalibrationValues "input/Day01.txt"
+                    actual @?= 54390
+                ]
+            ]
         ]
