@@ -26,6 +26,7 @@
                   fourmolu
                 ]))
             zlib
+            just
           ];
           shellHook = ''
             cyan=$(tput setaf 6)
