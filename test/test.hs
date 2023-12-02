@@ -47,5 +47,15 @@ tests =
                     actual <- sumPossibleGameIds "input/Day02.txt"
                     actual @?= 3035
                 ]
+            , testGroup
+                "Part 2"
+                [ testCase "Example" $ do
+                    actual <- sumCubePower "example/Day02.txt"
+                    actual @?= 2286
+                , testCase "Input" $ do
+                    getInput 2
+                    actual <- sumCubePower "input/Day02.txt"
+                    actual @?= 66027
+                ]
             ]
         ]
