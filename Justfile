@@ -2,7 +2,7 @@ alias b := build
 alias t := test
 alias w := watch
 
-build opts:
+build opts="":
     cabal build all {{ opts }}
 
 generate-cache-key:
