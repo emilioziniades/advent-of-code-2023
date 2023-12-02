@@ -9,7 +9,7 @@ type Blue = Int
 data Cubes = Cubes Red Green Blue
 type Round = Cubes
 
-data Game = Game {gameId :: Int, _rounds :: [Round]}
+data Game = Game {gameId :: Int, _gameRounds :: [Round]}
 
 -- Part 1
 
@@ -20,7 +20,7 @@ sumPossibleGameIds filename = do
     return $ sum $ map gameId $ filter (isGamePossible totals) $ map parseGame $ lines file
 
 isGamePossible :: Cubes -> Game -> Bool
-isGamePossible bs (Game _ rs) = all (isRoundPossible bs) rs
+isGamePossible cs (Game _ rs) = all (isRoundPossible cs) rs
 
 isRoundPossible :: Cubes -> Round -> Bool
 isRoundPossible (Cubes tR tG tB) (Cubes r g b) = r <= tR && g <= tG && b <= tB
@@ -65,17 +65,14 @@ updateRound round (Cubes r g b) = case words round of
     _ -> error ("badly structured round:" ++ show (words round))
 
 splitOn :: (Eq a) => a -> [a] -> [[a]]
-splitOn char list
-    | char `notElem` list = [list]
-    | otherwise =
-        let
-            (a, b) = splitOn2 char list
-         in
-            if char `elem` b
-                then a : splitOn char b
-                else [a, b]
+splitOn e list
+    | e `notElem` list = [list]
+    | e `elem` l2 = l1 : splitOn e l2
+    | otherwise = [l1, l2]
+  where
+    (l1, l2) = splitOn2 e list
 
 splitOn2 :: (Eq a) => a -> [a] -> ([a], [a])
-splitOn2 char list = case span (/= char) list of
+splitOn2 e list = case span (/= e) list of
     (as, _ : bs) -> (as, bs)
     (as, []) -> (as, [])
