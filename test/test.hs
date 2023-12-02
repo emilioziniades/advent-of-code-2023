@@ -2,6 +2,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Day01
+import Day02
 import Fetch
 
 main :: IO ()
@@ -32,6 +33,19 @@ tests =
                     getInput 1
                     actual <- sumCalibrationValues calibrationValueLiteral "input/Day01.txt"
                     actual @?= 54277
+                ]
+            ]
+        , testGroup
+            "Day 2"
+            [ testGroup
+                "Part 1"
+                [ testCase "Example" $ do
+                    actual <- sumPossibleGameIds "example/Day02.txt"
+                    actual @?= 8
+                , testCase "Input" $ do
+                    getInput 2
+                    actual <- sumPossibleGameIds "input/Day02.txt"
+                    actual @?= 3035
                 ]
             ]
         ]
