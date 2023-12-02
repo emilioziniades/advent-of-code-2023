@@ -17,7 +17,7 @@ sumPossibleGameIds :: String -> IO Int
 sumPossibleGameIds filename = do
     file <- readFile filename
     let totals = Cubes 12 13 14
-    return $ sum $ map gameId $ filter (isGamePossible totals) $ map parseGame $ lines file
+    pure $ sum $ fmap gameId $ filter (isGamePossible totals) $ parseGame <$> lines file
 
 isGamePossible :: Cubes -> Game -> Bool
 isGamePossible cs (Game _ rs) = all (isRoundPossible cs) rs
@@ -30,7 +30,7 @@ isRoundPossible (Cubes tR tG tB) (Cubes r g b) = r <= tR && g <= tG && b <= tB
 sumCubePower :: String -> IO Int
 sumCubePower filename = do
     file <- readFile filename
-    return $ sum $ map (cubePower . minimumViableCubes . parseGame) (lines file)
+    pure $ sum $ fmap (cubePower . minimumViableCubes . parseGame) (lines file)
 
 minimumViableCubes :: Game -> Cubes
 minimumViableCubes (Game _ rounds) = foldr1 maxEachColour rounds
@@ -52,7 +52,7 @@ parseGame line =
         Game gId (parseRounds rounds)
 
 parseRounds :: String -> [Round]
-parseRounds rounds = map parseRound (splitOn ';' rounds)
+parseRounds rounds = fmap parseRound (splitOn ';' rounds)
 
 parseRound :: String -> Round
 parseRound round = foldr updateRound (Cubes 0 0 0) (splitOn ',' round)
@@ -62,7 +62,7 @@ updateRound round (Cubes r g b) = case words round of
     [n, "red"] -> Cubes (read n) g b
     [n, "green"] -> Cubes r (read n) b
     [n, "blue"] -> Cubes r g (read n)
-    _ -> error ("badly structured round:" ++ show (words round))
+    _ -> error ("badly structured round:" <> show (words round))
 
 splitOn :: (Eq a) => a -> [a] -> [[a]]
 splitOn e list

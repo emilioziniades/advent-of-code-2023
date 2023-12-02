@@ -1,6 +1,9 @@
 alias b := build
 alias t := test
 alias w := watch
+alias l := lint
+
+default: lint build test
 
 build opts="":
     cabal build all {{ opts }}
@@ -17,5 +20,7 @@ test pattern="Tests":
 watch pattern="Tests":
     watchexec -c --shell=none -- just test '{{pattern}}'
 
+lint:
+    hlint .
 
 

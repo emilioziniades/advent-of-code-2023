@@ -6,7 +6,7 @@ import Data.List
 sumCalibrationValues :: (String -> Int) -> String -> IO Int
 sumCalibrationValues f filename = do
     file <- readFile filename
-    return $ (sum . map f . lines) file
+    pure $ (sum . fmap f . lines) file
 
 calibrationValue :: String -> Int
 calibrationValue line =
