@@ -2,11 +2,20 @@ alias b := build
 alias t := test
 alias w := watch
 
-build:
-    cabal build
+build opts:
+    cabal build all {{ opts }}
 
-test:
-    cabal test
+generate-cache-key:
+    just build "--dry-run"
 
-watch:
-    watchexec -c -- cabal test
+build-dependencies:
+    just build "--only-dependencies"
+
+test pattern="Tests":
+    cabal test --test-options '-p "{{pattern}}"'
+
+watch pattern="Tests":
+    watchexec -c --shell=none -- just test '{{pattern}}'
+
+
+
