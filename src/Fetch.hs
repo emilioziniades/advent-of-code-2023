@@ -29,4 +29,4 @@ downloadInput day = runReq defaultHttpConfig $ do
     liftIO $ BS.writeFile (inputFilename day) (responseBody r)
 
 inputFilename :: Day -> String
-inputFilename day = "input/" <> printf "Day%02d.txt" day
+inputFilename day = "input/" <> printf "day_%02d.txt" day
