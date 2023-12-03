@@ -41,7 +41,7 @@ sumGearRatios filename = do
     let grid = words file
     let partNumbers = getPartNumbers grid
     let gearPartNumbers = collectGearPartNumbers grid partNumbers
-    pure $ sum $ product <$> fmap snd (filter ((== 2) . length . snd) $ M.toList gearPartNumbers)
+    pure $ sum $ fmap product $ filter ((== 2) . length) $ M.elems gearPartNumbers
 
 collectGearPartNumbers :: Grid -> [PartNumber] -> GearMap
 collectGearPartNumbers grid = foldr (foldPartNumber grid) M.empty
