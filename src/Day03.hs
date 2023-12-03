@@ -1,10 +1,11 @@
-module Day03 (sumPartNumbers) where
+module Day03 (sumPartNumbers, sumGearRatios) where
 
 import Data.Char (isNumber)
 import Data.List
+import qualified Data.Map as M
 
 data Point = Point {getX :: Int, getY :: Int}
-    deriving (Show)
+    deriving (Show, Eq, Ord)
 
 data Range = Range Point Point
     deriving (Show)
@@ -19,23 +20,17 @@ data PartNumber = PartNumber {number :: Int, _range :: Range}
 sumPartNumbers :: String -> IO Int
 sumPartNumbers filename = do
     file <- readFile filename
-    let array = words file
-    pure $ sum $ number <$> filter (isPartNumber array) (getPartNumbers array)
+    let grid = words file
+    pure $ sum $ number <$> filter (isPartNumber grid) (getPartNumbers grid)
 
 getPartNumbers :: Grid -> [PartNumber]
-getPartNumbers array =
-    let
-        makeNumbers (row, x) = getPartNumbersInRow x row
-     in
-        mconcat $ fmap makeNumbers (enumerate array)
+getPartNumbers grid = concatMap getPartNumbersInRow (enumerate grid)
 
-getPartNumbersInRow :: Int -> Row -> [PartNumber]
-getPartNumbersInRow x row =
-    let
-        groups = groupBy areBothNumbers (enumerate row)
-        numbers = filter (isNumber . fst . head) groups
-     in
-        fmap (makePartNumber x) numbers
+getPartNumbersInRow :: (Row, Int) -> [PartNumber]
+getPartNumbersInRow (row, x) =
+    fmap (makePartNumber x) $
+        filter (isNumber . fst . head) $
+            groupBy areBothNumbers (enumerate row)
 
 makeRange :: Int -> [(Char, Int)] -> Range
 makeRange x ns = Range (Point x ((snd . head) ns)) (Point x ((snd . last) ns))
@@ -50,14 +45,43 @@ areBothNumbers :: (Char, a) -> (Char, a) -> Bool
 areBothNumbers (x, _) (y, _) = isNumber x && isNumber y
 
 isPartNumber :: Grid -> PartNumber -> Bool
-isPartNumber array (PartNumber _ range) = any isSymbol rangeNeighbours
+isPartNumber grid (PartNumber _ range) = any isSymbol rangeNeighbours
   where
-    rangeNeighbours = getRangeNeighbours array range
+    rangeNeighbours = fst <$> getRangeNeighbours grid range
 
 isSymbol :: Char -> Bool
 isSymbol c = (not . isNumber) c && c /= '.'
 
--- generic array logic
+-- Part 2
+
+type GearMap = M.Map Point [Int]
+
+sumGearRatios :: String -> IO Int
+sumGearRatios filename = do
+    file <- readFile filename
+    let grid = words file
+    let partNumbers = getPartNumbers grid
+    let gearPartNumbers = collectGearPartNumbers grid partNumbers
+    pure $ sum $ product <$> fmap snd (filter ((== 2) . length . snd) $ M.toList gearPartNumbers)
+
+collectGearPartNumbers :: Grid -> [PartNumber] -> GearMap
+collectGearPartNumbers grid = foldr (foldPartNumber grid) M.empty
+
+foldPartNumber :: Grid -> PartNumber -> GearMap -> GearMap
+foldPartNumber grid (PartNumber n range) hashMap =
+    let
+        partNumberNeighbours = getRangeNeighbours grid range
+        isGear (c, _) = c == '*'
+        gear = find isGear partNumberNeighbours
+     in
+        case gear of
+            Just (_, pt) -> M.insertWith (++) pt [n] hashMap
+            Nothing -> hashMap
+
+-- collect the part numbers into a hashmap (* point -> [numbers])
+-- multiply together and add
+
+-- generic grid logic
 
 getPoints :: Range -> [Point]
 getPoints (Range start end) = fmap (Point x1) [y1 .. y2]
@@ -81,20 +105,22 @@ neighbours point =
     x = getX point
     y = getY point
 
-arrayNeighbours :: Grid -> Point -> [Char]
-arrayNeighbours array point = arrayLookup array <$> filter (isInBounds array) (neighbours point)
+gridNeighbours :: Grid -> Point -> [(Char, Point)]
+gridNeighbours grid point = gridLookup grid <$> filter (isInBounds grid) (neighbours point)
 
-arrayLookup :: Grid -> Point -> Char
-arrayLookup array (Point x y) = (array !! x) !! y
+gridLookup :: Grid -> Point -> (Char, Point)
+gridLookup grid pt@(Point x y) = (c, pt)
+  where
+    c = (grid !! x) !! y
 
 isInBounds :: Grid -> Point -> Bool
-isInBounds array (Point x y) = x >= 0 && x < maxX && y >= 0 && y < maxY
+isInBounds grid (Point x y) = x >= 0 && x < maxX && y >= 0 && y < maxY
   where
-    maxX = length array
-    maxY = (length . head) array
+    maxX = length grid
+    maxY = (length . head) grid
 
-getRangeNeighbours :: Grid -> Range -> [Char]
-getRangeNeighbours array range = mconcat $ fmap (arrayNeighbours array) (getPoints range)
+getRangeNeighbours :: Grid -> Range -> [(Char, Point)]
+getRangeNeighbours grid range = concatMap (gridNeighbours grid) (getPoints range)
 
 -- utility
 

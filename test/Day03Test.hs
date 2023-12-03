@@ -15,12 +15,19 @@ day03Tests =
             [ testCase "Example" $ do
                 actual <- sumPartNumbers "example/Day03.txt"
                 actual @?= 4361
-            ]
-        , testGroup
-            "Part 1"
-            [ testCase "Input" $ do
+            , testCase "Input" $ do
                 getInput 3
                 actual <- sumPartNumbers "input/Day03.txt"
                 actual @?= 554003
+            ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- sumGearRatios "example/Day03.txt"
+                actual @?= 467835
+            , testCase "Input" $ do
+                getInput 3
+                actual <- sumGearRatios "input/Day03.txt"
+                actual @?= 87263515
             ]
         ]
