@@ -15,6 +15,8 @@ type Row = [Char]
 
 data PartNumber = PartNumber {number :: Int, _range :: Range}
 
+type GearMap = M.Map Point [Int]
+
 -- Part 1
 
 sumPartNumbers :: String -> IO Int
@@ -22,27 +24,6 @@ sumPartNumbers filename = do
     file <- readFile filename
     let grid = words file
     pure $ sum $ number <$> filter (isPartNumber grid) (getPartNumbers grid)
-
-getPartNumbers :: Grid -> [PartNumber]
-getPartNumbers grid = concatMap getPartNumbersInRow (enumerate grid)
-
-getPartNumbersInRow :: (Row, Int) -> [PartNumber]
-getPartNumbersInRow (row, x) =
-    fmap (makePartNumber x) $
-        filter (isNumber . fst . head) $
-            groupBy areBothNumbers (enumerate row)
-
-makeRange :: Int -> [(Char, Int)] -> Range
-makeRange x ns = Range (Point x ((snd . head) ns)) (Point x ((snd . last) ns))
-
-makeNumber :: [(Char, Int)] -> Int
-makeNumber ns = read $ fst <$> ns
-
-makePartNumber :: Int -> [(Char, Int)] -> PartNumber
-makePartNumber x ns = PartNumber (makeNumber ns) (makeRange x ns)
-
-areBothNumbers :: (Char, a) -> (Char, a) -> Bool
-areBothNumbers (x, _) (y, _) = isNumber x && isNumber y
 
 isPartNumber :: Grid -> PartNumber -> Bool
 isPartNumber grid (PartNumber _ range) = any isSymbol rangeNeighbours
@@ -53,8 +34,6 @@ isSymbol :: Char -> Bool
 isSymbol c = (not . isNumber) c && c /= '.'
 
 -- Part 2
-
-type GearMap = M.Map Point [Int]
 
 sumGearRatios :: String -> IO Int
 sumGearRatios filename = do
@@ -78,8 +57,28 @@ foldPartNumber grid (PartNumber n range) hashMap =
             Just (_, pt) -> M.insertWith (++) pt [n] hashMap
             Nothing -> hashMap
 
--- collect the part numbers into a hashmap (* point -> [numbers])
--- multiply together and add
+-- Used across both Part 1 and Part 2
+
+getPartNumbers :: Grid -> [PartNumber]
+getPartNumbers grid = concatMap getPartNumbersInRow (enumerate grid)
+
+getPartNumbersInRow :: (Row, Int) -> [PartNumber]
+getPartNumbersInRow (row, x) =
+    fmap (makePartNumber x) $
+        filter (isNumber . fst . head) $
+            groupBy areBothNumbers (enumerate row)
+
+makePartNumber :: Int -> [(Char, Int)] -> PartNumber
+makePartNumber x ns = PartNumber (makeNumber ns) (makeRange x ns)
+
+makeNumber :: [(Char, Int)] -> Int
+makeNumber ns = read $ fst <$> ns
+
+makeRange :: Int -> [(Char, Int)] -> Range
+makeRange x ns = Range (Point x ((snd . head) ns)) (Point x ((snd . last) ns))
+
+areBothNumbers :: (Char, a) -> (Char, a) -> Bool
+areBothNumbers (x, _) (y, _) = isNumber x && isNumber y
 
 -- generic grid logic
 
