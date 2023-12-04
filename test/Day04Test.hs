@@ -28,6 +28,6 @@ day04Tests =
             , testCase "Input" $ do
                 getInput 4
                 actual <- scratchcardsTotal "input/day_04.txt"
-                actual @?= 0
+                actual @?= 14624680
             ]
         ]
