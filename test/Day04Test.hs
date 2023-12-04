@@ -25,9 +25,9 @@ day04Tests =
             [ testCase "Example" $ do
                 actual <- scratchcardsTotal "example/day_04.txt"
                 actual @?= 30
-                -- , testCase "Input" $ do
-                --     getInput 4
-                --     actual <- scratchcardPoints "input/day_04.txt"
-                --     actual @?= 32609
+            , testCase "Input" $ do
+                getInput 4
+                actual <- scratchcardsTotal "input/day_04.txt"
+                actual @?= 0
             ]
         ]
