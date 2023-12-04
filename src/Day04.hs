@@ -32,20 +32,17 @@ scratchcardsTotal :: FilePath -> IO Int
 scratchcardsTotal filename = do
     file <- readFile filename
     let scratchcards = parseScratchcard <$> lines file
-    let matches = makeMatchesCount scratchcards
-    let counts = makeCounts scratchcards
-    print counts
-    print $ foldCopy matches 1 counts
     pure $ sum $ Map.elems $ foldCopies (makeMatchesCount scratchcards) (makeCounts scratchcards)
 
 foldCopies :: ScratchcardMatches -> ScratchcardCounts -> ScratchcardCounts
-foldCopies matches counts = foldr (foldCopy matches) counts [1 .. Map.size counts]
+foldCopies matches counts = foldl (foldCopy matches) counts [1 .. Map.size counts]
 
-foldCopy :: ScratchcardMatches -> CardId -> ScratchcardCounts -> ScratchcardCounts
-foldCopy matches cardId counts = foldr incrementCount counts [cardId + 1 .. cardId + cardMatches]
+foldCopy :: ScratchcardMatches -> ScratchcardCounts -> CardId -> ScratchcardCounts
+foldCopy matches counts cardId = foldl incrementCount counts [cardId + 1 .. cardId + cardMatches]
   where
     cardMatches = sum $ Map.lookup cardId matches
-    incrementCount = Map.update (Just . (+ 1))
+    cardCounts = sum $ Map.lookup cardId counts
+    incrementCount cs cId = Map.update (\x -> Just $ x + cardCounts) cId cs
 
 makeMatchesCount :: [Scratchcard] -> ScratchcardMatches
 makeMatchesCount = foldr foldScratchcards Map.empty
