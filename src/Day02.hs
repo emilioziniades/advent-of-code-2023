@@ -14,7 +14,7 @@ data Game = Game {gameId :: Int, _gameRounds :: [Round]}
 
 -- Part 1
 
-sumPossibleGameIds :: String -> IO Int
+sumPossibleGameIds :: FilePath -> IO Int
 sumPossibleGameIds filename = do
     file <- readFile filename
     let totals = Cubes 12 13 14
@@ -28,7 +28,7 @@ isRoundPossible (Cubes tR tG tB) (Cubes r g b) = r <= tR && g <= tG && b <= tB
 
 -- Part 2
 
-sumCubePower :: String -> IO Int
+sumCubePower :: FilePath -> IO Int
 sumCubePower filename = do
     file <- readFile filename
     pure $ sum $ fmap (cubePower . minimumViableCubes . parseGame) (lines file)

@@ -19,7 +19,7 @@ type GearMap = Map.Map Point [Int]
 
 -- Part 1
 
-sumPartNumbers :: String -> IO Int
+sumPartNumbers :: FilePath -> IO Int
 sumPartNumbers filename = do
     file <- readFile filename
     let grid = words file
@@ -35,7 +35,7 @@ isSymbol c = (not . isNumber) c && c /= '.'
 
 -- Part 2
 
-sumGearRatios :: String -> IO Int
+sumGearRatios :: FilePath -> IO Int
 sumGearRatios filename = do
     file <- readFile filename
     let grid = words file

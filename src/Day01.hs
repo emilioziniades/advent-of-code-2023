@@ -3,7 +3,7 @@ module Day01 (sumCalibrationValues, calibrationValue, calibrationValueLiteral) w
 import Data.Char
 import Data.List
 
-sumCalibrationValues :: (String -> Int) -> String -> IO Int
+sumCalibrationValues :: (String -> Int) -> FilePath -> IO Int
 sumCalibrationValues f filename = do
     file <- readFile filename
     pure $ (sum . fmap f . lines) file
