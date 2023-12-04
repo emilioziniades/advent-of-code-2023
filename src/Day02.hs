@@ -1,5 +1,6 @@
 module Day02 (sumPossibleGameIds, sumCubePower) where
 
+import Parse
 import Prelude hiding (round)
 
 type Green = Int
@@ -63,16 +64,3 @@ updateRound round (Cubes r g b) = case words round of
     [n, "green"] -> Cubes r (read n) b
     [n, "blue"] -> Cubes r g (read n)
     _ -> error ("badly structured round:" <> show (words round))
-
-splitOn :: (Eq a) => a -> [a] -> [[a]]
-splitOn e list
-    | e `notElem` list = [list]
-    | e `elem` l2 = l1 : splitOn e l2
-    | otherwise = [l1, l2]
-  where
-    (l1, l2) = splitOn2 e list
-
-splitOn2 :: (Eq a) => a -> [a] -> ([a], [a])
-splitOn2 e list = case span (/= e) list of
-    (as, _ : bs) -> (as, bs)
-    (as, []) -> (as, [])

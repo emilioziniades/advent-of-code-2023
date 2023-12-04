@@ -2,7 +2,7 @@ module Day03 (sumPartNumbers, sumGearRatios) where
 
 import Data.Char (isNumber)
 import Data.List
-import qualified Data.Map as M
+import qualified Data.Map as Map
 
 data Point = Point {getX :: Int, getY :: Int}
     deriving (Show, Eq, Ord)
@@ -15,7 +15,7 @@ type Row = [Char]
 
 data PartNumber = PartNumber {number :: Int, _range :: Range}
 
-type GearMap = M.Map Point [Int]
+type GearMap = Map.Map Point [Int]
 
 -- Part 1
 
@@ -41,10 +41,10 @@ sumGearRatios filename = do
     let grid = words file
     let partNumbers = getPartNumbers grid
     let gearPartNumbers = collectGearPartNumbers grid partNumbers
-    pure $ sum $ fmap product $ filter ((== 2) . length) $ M.elems gearPartNumbers
+    pure $ sum $ fmap product $ filter ((== 2) . length) $ Map.elems gearPartNumbers
 
 collectGearPartNumbers :: Grid -> [PartNumber] -> GearMap
-collectGearPartNumbers grid = foldr (foldPartNumber grid) M.empty
+collectGearPartNumbers grid = foldr (foldPartNumber grid) Map.empty
 
 foldPartNumber :: Grid -> PartNumber -> GearMap -> GearMap
 foldPartNumber grid (PartNumber n range) hashMap =
@@ -54,7 +54,7 @@ foldPartNumber grid (PartNumber n range) hashMap =
         gear = find isGear partNumberNeighbours
      in
         case gear of
-            Just (_, pt) -> M.insertWith (++) pt [n] hashMap
+            Just (_, pt) -> Map.insertWith (++) pt [n] hashMap
             Nothing -> hashMap
 
 -- Used across both Part 1 and Part 2
