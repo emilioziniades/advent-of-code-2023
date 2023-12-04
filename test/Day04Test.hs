@@ -20,4 +20,14 @@ day04Tests =
                 actual <- scratchcardPoints "input/day_04.txt"
                 actual @?= 32609
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- scratchcardsTotal "example/day_04.txt"
+                actual @?= 30
+                -- , testCase "Input" $ do
+                --     getInput 4
+                --     actual <- scratchcardPoints "input/day_04.txt"
+                --     actual @?= 32609
+            ]
         ]
