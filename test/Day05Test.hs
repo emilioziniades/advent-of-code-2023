@@ -4,6 +4,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Day05
+import Fetch
 
 day05Tests :: TestTree
 day05Tests =
@@ -14,5 +15,9 @@ day05Tests =
             [ testCase "Example" $ do
                 actual <- lowestLocationNumber "example/day_05.txt"
                 actual @?= 35
+            , testCase "Input" $ do
+                getInput 5
+                actual <- lowestLocationNumber "input/day_05.txt"
+                actual @?= 261668924
             ]
         ]

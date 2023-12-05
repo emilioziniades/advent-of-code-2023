@@ -1,11 +1,12 @@
 module Day05 (lowestLocationNumber) where
 
 import Data.Char
+import Debug.Trace
 import Parse (splitOn)
 
 type Seed = Int
 
-data Almanac = Almanac {seeds :: [Seed], mappings :: [[Mapping]]} deriving (Show)
+data Almanac = Almanac {seeds :: [Seed], _mappings :: [[Mapping]]} deriving (Show)
 
 -- data Category = Seed | Soil | Fertilizer | Water | Light | Temperature | Humidity | Location deriving (Show)
 
@@ -16,12 +17,25 @@ data Mapping = Mapping
     }
     deriving (Show)
 
+-- Part 1
+
 lowestLocationNumber :: FilePath -> IO Int
 lowestLocationNumber filename = do
     file <- readFile filename
     let almanac = parseInput file
-    print almanac
-    pure 0
+    pure $ minimum $ fmap (locationNumber almanac) (seeds almanac)
+
+locationNumber :: Almanac -> Seed -> Int
+locationNumber (Almanac _ mappings) seed = foldl translateNumber seed mappings
+
+translateNumber :: Int -> [Mapping] -> Int
+translateNumber n [] = n
+translateNumber n ((Mapping dstStart srcStart rangeSize) : ms) =
+    if n >= srcStart && n < (srcStart + rangeSize)
+        then (n - srcStart) + dstStart
+        else translateNumber n ms
+
+-- Input parsing
 
 parseInput :: String -> Almanac
 parseInput file = Almanac (read <$> words seedsRow) ((fmap . fmap) parseMappingRow mappingsRows)
