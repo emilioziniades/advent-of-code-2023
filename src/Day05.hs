@@ -2,7 +2,7 @@ module Day05 (lowestLocationNumber, lowestLocationNumberRanges) where
 
 import Data.Char
 import Data.List
-import Parse
+import Util.Lists
 
 type Seed = Int
 
@@ -94,9 +94,3 @@ parseMappingRow mappingRow =
     case words mappingRow of
         [x, y, z] -> Mapping (read y) (read x) (read z)
         _ -> error $ "malformed mapping row " <> mappingRow
-
--- Utility functions
-
-windowsN :: Int -> [a] -> [[a]]
-windowsN _ [] = []
-windowsN n xs = take n xs : windowsN n (drop n xs)

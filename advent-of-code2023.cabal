@@ -12,8 +12,9 @@ common warnings
 library
     import:           warnings
     exposed-modules:  
-        Fetch
-        Parse
+        Util.Fetch
+        Util.Lists
+        Util.Maths
         Day01
         Day02
         Day03

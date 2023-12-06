@@ -1,6 +1,6 @@
 module Day02 (sumPossibleGameIds, sumCubePower) where
 
-import Parse
+import Util.Lists
 import Prelude hiding (round)
 
 type Green = Int

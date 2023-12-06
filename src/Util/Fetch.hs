@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Fetch (getInput) where
+module Util.Fetch (getInput) where
 
 import Configuration.Dotenv
 import Control.Monad

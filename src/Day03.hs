@@ -3,6 +3,7 @@ module Day03 (sumPartNumbers, sumGearRatios) where
 import Data.Char (isNumber)
 import Data.List
 import qualified Data.Map as Map
+import Util.Lists
 
 data Point = Point {getX :: Int, getY :: Int}
     deriving (Show, Eq, Ord)
@@ -120,8 +121,3 @@ isInBounds grid (Point x y) = x >= 0 && x < maxX && y >= 0 && y < maxY
 
 getRangeNeighbours :: Grid -> Range -> [(Char, Point)]
 getRangeNeighbours grid range = concatMap (gridNeighbours grid) (getPoints range)
-
--- utility
-
-enumerate :: [a] -> [(a, Int)]
-enumerate arr = zip arr [0 ..]

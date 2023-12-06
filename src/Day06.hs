@@ -2,6 +2,7 @@ module Day06 (recordBreakingProduct, recordBreakingRace) where
 
 import Control.Applicative
 import Data.Char
+import Util.Maths
 
 type Time = Double
 type Distance = Double
@@ -49,11 +50,3 @@ parseSingleRace file = (read $ head l, read $ l !! 1)
     l = filter isDigit <$> lines file
 
 -- Maths
-
-quadraticRoots :: (Floating a) => a -> a -> a -> (a, a)
-quadraticRoots a b c =
-    ( (-b + discr) / (2 * a)
-    , (-b - discr) / (2 * a)
-    )
-  where
-    discr = sqrt ((b ** 2) - (4 * a * c))

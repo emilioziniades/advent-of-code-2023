@@ -4,7 +4,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Day06
-import Fetch
+import Util.Fetch
 
 day06Tests :: TestTree
 day06Tests =

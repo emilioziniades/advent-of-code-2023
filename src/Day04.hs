@@ -4,7 +4,7 @@ module Day04 (scratchcardPoints, scratchcardsTotal) where
 
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import Parse
+import Util.Lists
 
 type CardId = Int
 type Matches = Int
