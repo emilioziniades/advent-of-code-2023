@@ -25,5 +25,9 @@ day05Tests =
             [ testCase "Example" $ do
                 actual <- lowestLocationNumberRanges "example/day_05.txt"
                 actual @?= 46
+            , testCase "Input" $ do
+                getInput 5
+                actual <- lowestLocationNumberRanges "input/day_05.txt"
+                actual @?= 24261545
             ]
         ]

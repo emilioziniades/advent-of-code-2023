@@ -1,20 +1,16 @@
 module Day05 (lowestLocationNumber, lowestLocationNumberRanges) where
 
 import Data.Char
-import Debug.Trace
 import Parse
 
 type Seed = Int
 
-data SeedRange = SeedRange {seedRangeStart :: Int, seedRangeSize :: Int} deriving (Show)
+data SeedRange = SeedRange {seedRangeStart :: Int, seedRangeSize :: Int}
+    deriving (Show)
 
 type Almanac = [[Mapping]]
 
-data Mapping = Mapping
-    { sourceRangeStart :: Int
-    , destinationRangeStart :: Int
-    , rangeLength :: Int
-    }
+data Mapping = Mapping {sourceRangeStart :: Int, destinationRangeStart :: Int, rangeLength :: Int}
     deriving (Show, Eq, Ord)
 
 -- Part 1
@@ -49,37 +45,22 @@ locationNumberRanges mappings ranges = foldl (\rs m -> concatMap (translateRange
 translateRange :: [Mapping] -> [Mapping] -> SeedRange -> [SeedRange]
 translateRange allMs (m : ms) s
     -- easiest case - the seed range falls entirely within one mapping range
-    | seedStartInMapping && seedEndInMapping =
-        trace
-            ("seed range is wholly contained by mapping " <> show s <> " " <> show m)
-            [SeedRange (seedStart - srcStart + dstStart) seedRange]
+    | seedStartInMapping && seedEndInMapping = [SeedRange (seedStart - srcStart + dstStart) seedRange]
     -- seed range starts outside of mapping but ends inside it
     | not seedStartInMapping && seedEndInMapping =
-        trace
-            ("beginning of seed range sticks out " <> show s <> " " <> show m)
-            translateRange
-            allMs
-            allMs
-            (SeedRange seedStart (srcStart - seedStart))
+        translateRange allMs allMs (SeedRange seedStart (srcStart - seedStart))
             <> [SeedRange dstStart (seedEnd - srcStart)]
     -- seed range starts inside of mapping but ends outside it
     | seedStartInMapping && not seedEndInMapping =
-        trace
-            "end of seed range sticks out "
-            [SeedRange (seedStart - srcStart + dstStart) (srcEnd - seedStart)]
+        [SeedRange (seedStart - srcStart + dstStart) (srcEnd - seedStart)]
             <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
     -- seed range starts and ends outside mapping, but middle chunk is inside it
     | seedWhollyContainsMapping =
-        trace
-            "both ends stick out "
-            translateRange
-            allMs
-            allMs
-            (SeedRange seedStart (srcStart - seedStart))
+        translateRange allMs allMs (SeedRange seedStart (srcStart - seedStart))
             <> [SeedRange dstStart range]
             <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
     -- fallback - there is absolutely no overlap between mapping and range. Try next mapping
-    | otherwise = trace "hit fallback" $ translateRange allMs ms s
+    | otherwise = translateRange allMs ms s
   where
     (Mapping srcStart dstStart range) = m
     (SeedRange seedStart seedRange) = s
