@@ -1,20 +1,21 @@
 module Day05 (lowestLocationNumber, lowestLocationNumberRanges) where
 
 import Data.Char
-import Parse (splitOn)
+import Debug.Trace
+import Parse
 
 type Seed = Int
 
-data SeedRange = SeedRange Int Int deriving (Show)
+data SeedRange = SeedRange {seedRangeStart :: Int, seedRangeSize :: Int} deriving (Show)
 
 type Almanac = [[Mapping]]
 
 data Mapping = Mapping
-    { destinationRangeStart :: Int
-    , sourceRangeStart :: Int
+    { sourceRangeStart :: Int
+    , destinationRangeStart :: Int
     , rangeLength :: Int
     }
-    deriving (Show)
+    deriving (Show, Eq, Ord)
 
 -- Part 1
 
@@ -29,7 +30,7 @@ locationNumber mappings seed = foldl translateNumber seed mappings
 
 translateNumber :: Int -> [Mapping] -> Int
 translateNumber n [] = n
-translateNumber n ((Mapping dstStart srcStart rangeSize) : ms) =
+translateNumber n ((Mapping srcStart dstStart rangeSize) : ms) =
     if n >= srcStart && n < (srcStart + rangeSize)
         then (n - srcStart) + dstStart
         else translateNumber n ms
@@ -40,35 +41,110 @@ lowestLocationNumberRanges :: FilePath -> IO Int
 lowestLocationNumberRanges filename = do
     file <- readFile filename
     let (almanac, seedRanges) = parseInput parseSeedRanges file
-    let x = head seedRanges
-    print seedRanges
-    -- print $ locationNumberRanges almanac seedRanges
-    pure 0
+    pure $ minimum $ seedRangeStart <$> locationNumberRanges almanac seedRanges
 
 locationNumberRanges :: Almanac -> [SeedRange] -> [SeedRange]
-locationNumberRanges mappings ranges = foldl (\rs m -> concatMap (translateRange m) ranges) ranges mappings
+locationNumberRanges mappings ranges = foldl (\rs m -> concatMap (translateRange m m) rs) ranges mappings
 
--- note: may have to sort mappings first
-
-translateRange :: [Mapping] -> SeedRange -> [SeedRange]
-translateRange mappings@((Mapping dstStart srcStart rangeSize) : ms) seedRange@(SeedRange seedRangeStart seedRangeSize)
+translateRange :: [Mapping] -> [Mapping] -> SeedRange -> [SeedRange]
+translateRange allMs (m : ms) s
     -- easiest case - the seed range falls entirely within one mapping range
-    | seedRangeStart >= srcStart && seedRangeEnd < srcEnd = [SeedRange newRangeStart seedRangeSize]
+    | seedStartInMapping && seedEndInMapping =
+        trace
+            ("seed range is wholly contained by mapping " <> show s <> " " <> show m)
+            [SeedRange (seedStart - srcStart + dstStart) seedRange]
     -- seed range starts outside of mapping but ends inside it
-    | seedRangeStart < srcStart && seedRangeEnd < srcEnd = translateRange mappings preSeedRange <> [SeedRange dstStart (seedRangeEnd - srcStart)]
+    | not seedStartInMapping && seedEndInMapping =
+        trace
+            ("beginning of seed range sticks out " <> show s <> " " <> show m)
+            translateRange
+            allMs
+            allMs
+            (SeedRange seedStart (srcStart - seedStart))
+            <> [SeedRange dstStart (seedEnd - srcStart)]
     -- seed range starts inside of mapping but ends outside it
-    | seedRangeStart >= srcStart && seedRangeEnd >= srcEnd = SeedRange newRangeStart (srcEnd - seedRangeStart) : translateRange mappings postSeedRange
+    | seedStartInMapping && not seedEndInMapping =
+        trace
+            "end of seed range sticks out "
+            [SeedRange (seedStart - srcStart + dstStart) (srcEnd - seedStart)]
+            <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
     -- seed range starts and ends outside mapping, but middle chunk is inside it
-    | seedRangeStart < srcStart && seedRangeEnd >= srcEnd = translateRange mappings preSeedRange <> [SeedRange newRangeStart rangeSize] <> translateRange mappings postSeedRange
+    | seedWhollyContainsMapping =
+        trace
+            "both ends stick out "
+            translateRange
+            allMs
+            allMs
+            (SeedRange seedStart (srcStart - seedStart))
+            <> [SeedRange dstStart range]
+            <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
     -- fallback - there is absolutely no overlap between mapping and range. Try next mapping
-    | otherwise = translateRange ms seedRange
+    | otherwise = trace "hit fallback" $ translateRange allMs ms s
   where
-    srcEnd = srcStart + rangeSize
-    seedRangeEnd = seedRangeStart + seedRangeSize
-    newRangeStart = (seedRangeStart - srcStart) + dstStart
-    preSeedRange = SeedRange seedRangeStart (srcStart - seedRangeStart)
-    postSeedRange = SeedRange srcEnd (seedRangeEnd - srcEnd)
-translateRange [] seedRange = [seedRange]
+    (Mapping srcStart dstStart range) = m
+    (SeedRange seedStart seedRange) = s
+    -- ends
+    srcEnd = srcStart + range
+    seedEnd = seedStart + seedRange
+    seedStartInMapping = seedStart >= srcStart && seedStart < srcEnd
+    seedEndInMapping = seedEnd > srcStart && seedEnd <= srcEnd
+    seedWhollyContainsMapping = seedStart < srcStart && seedEnd > srcEnd
+translateRange _ [] s = [s]
+
+{-
+Think about it like this:
+
+there are two three cases of seed and mapping range sizes
+
+equal:
+seed       ----
+mapping    ----
+
+seed-larger:
+seed       ------
+mapping     ----
+
+seed-smaller:
+seed        ----
+mapping    ------
+
+take the 'equal' scenario. there are various possible overlaps
+
+seed     ----
+mapping        ----
+
+seed     ----
+mapping    ----
+
+seed       ----
+mapping    ----
+
+seed         ----
+mapping    ----
+
+seed             ----
+mapping    ----
+
+take the 'seed-larger' scenario. there are various possible overlaps
+
+seed       ------
+mapping            ----
+
+seed       ------
+mapping        ----
+
+seed       ------
+mapping     ----
+
+seed         ------
+mapping     ----
+
+seed             ------
+mapping     ----
+
+-}
+
+-- idea: split ranges once, and then process them once
 
 -- too tired but here's the plan:
 -- you need to handle the ranges as ranges, not individual seeds as there are too many
@@ -99,10 +175,11 @@ parseSeedRange _ = error "malformed seed range"
 parseMappingRow :: String -> Mapping
 parseMappingRow mappingRow =
     case words mappingRow of
-        [x, y, z] -> Mapping (read x) (read y) (read z)
+        [x, y, z] -> Mapping (read y) (read x) (read z)
         _ -> error $ "malformed mapping row " <> mappingRow
 
 -- Utility functions
+
 windowsN :: Int -> [a] -> [[a]]
 windowsN _ [] = []
 windowsN n xs = take n xs : windowsN n (drop n xs)

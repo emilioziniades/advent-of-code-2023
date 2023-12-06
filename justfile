@@ -18,7 +18,7 @@ test pattern="Tests":
     cabal test --test-options '-p "{{pattern}}"'
 
 watch pattern="Tests":
-    watchexec -c --shell=none -- just test '{{pattern}}'
+    watchexec -c --shell none -o restart -- just test '{{pattern}}'
 
 lint:
     hlint .
