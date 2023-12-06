@@ -1,6 +1,7 @@
 module Day05 (lowestLocationNumber, lowestLocationNumberRanges) where
 
 import Data.Char
+import Data.List
 import Parse
 
 type Seed = Int
@@ -40,99 +41,34 @@ lowestLocationNumberRanges filename = do
     pure $ minimum $ seedRangeStart <$> locationNumberRanges almanac seedRanges
 
 locationNumberRanges :: Almanac -> [SeedRange] -> [SeedRange]
-locationNumberRanges mappings ranges = foldl (\rs m -> concatMap (translateRange m m) rs) ranges mappings
+locationNumberRanges mappings ranges = foldl (\rs ms -> concatMap (translateRange ms) rs) ranges (fmap sort mappings)
 
-translateRange :: [Mapping] -> [Mapping] -> SeedRange -> [SeedRange]
-translateRange allMs (m : ms) s
+translateRange :: [Mapping] -> SeedRange -> [SeedRange]
+translateRange (Mapping srcStart dstStart range : ms) s@(SeedRange seedStart seedRange)
     -- easiest case - the seed range falls entirely within one mapping range
     | seedStartInMapping && seedEndInMapping = [SeedRange (seedStart - srcStart + dstStart) seedRange]
     -- seed range starts outside of mapping but ends inside it
     | not seedStartInMapping && seedEndInMapping =
-        translateRange allMs allMs (SeedRange seedStart (srcStart - seedStart))
+        translateRange ms (SeedRange seedStart (srcStart - seedStart))
             <> [SeedRange dstStart (seedEnd - srcStart)]
     -- seed range starts inside of mapping but ends outside it
     | seedStartInMapping && not seedEndInMapping =
         [SeedRange (seedStart - srcStart + dstStart) (srcEnd - seedStart)]
-            <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
+            <> translateRange ms (SeedRange srcEnd (seedEnd - srcEnd))
     -- seed range starts and ends outside mapping, but middle chunk is inside it
     | seedWhollyContainsMapping =
-        translateRange allMs allMs (SeedRange seedStart (srcStart - seedStart))
+        translateRange ms (SeedRange seedStart (srcStart - seedStart))
             <> [SeedRange dstStart range]
-            <> translateRange allMs allMs (SeedRange srcEnd (seedEnd - srcEnd))
+            <> translateRange ms (SeedRange srcEnd (seedEnd - srcEnd))
     -- fallback - there is absolutely no overlap between mapping and range. Try next mapping
-    | otherwise = translateRange allMs ms s
+    | otherwise = translateRange ms s
   where
-    (Mapping srcStart dstStart range) = m
-    (SeedRange seedStart seedRange) = s
-    -- ends
     srcEnd = srcStart + range
     seedEnd = seedStart + seedRange
     seedStartInMapping = seedStart >= srcStart && seedStart < srcEnd
     seedEndInMapping = seedEnd > srcStart && seedEnd <= srcEnd
     seedWhollyContainsMapping = seedStart < srcStart && seedEnd > srcEnd
-translateRange _ [] s = [s]
-
-{-
-Think about it like this:
-
-there are two three cases of seed and mapping range sizes
-
-equal:
-seed       ----
-mapping    ----
-
-seed-larger:
-seed       ------
-mapping     ----
-
-seed-smaller:
-seed        ----
-mapping    ------
-
-take the 'equal' scenario. there are various possible overlaps
-
-seed     ----
-mapping        ----
-
-seed     ----
-mapping    ----
-
-seed       ----
-mapping    ----
-
-seed         ----
-mapping    ----
-
-seed             ----
-mapping    ----
-
-take the 'seed-larger' scenario. there are various possible overlaps
-
-seed       ------
-mapping            ----
-
-seed       ------
-mapping        ----
-
-seed       ------
-mapping     ----
-
-seed         ------
-mapping     ----
-
-seed             ------
-mapping     ----
-
--}
-
--- idea: split ranges once, and then process them once
-
--- too tired but here's the plan:
--- you need to handle the ranges as ranges, not individual seeds as there are too many
--- best case: the seed range falls entirely within a single mapping. Easy. Map the range.
--- worst case: SOME of the seed range falls within this range. So, you have to split the range
--- up into smaller ranges such that each sub-range can be mapped. Split up the range on the boundaries
--- of the current mapping, recursively, until you are left with only ranges that can be entirely mapped.
+translateRange [] s = [s]
 
 -- Input parsing
 
