@@ -20,4 +20,13 @@ day06Tests =
                 actual <- recordBreakingProduct "input/day_06.txt"
                 actual @?= 3316275
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- recordBreakingRace "example/day_06.txt"
+                actual @?= 71503
+            , testCase "Input" $ do
+                actual <- recordBreakingRace "input/day_06.txt"
+                actual @?= 27102791
+            ]
         ]

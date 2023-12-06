@@ -1,30 +1,59 @@
-module Day06 (recordBreakingProduct) where
+module Day06 (recordBreakingProduct, recordBreakingRace) where
 
 import Control.Applicative
 import Data.Char
 
-type Time = Int
-type Distance = Int
+type Time = Double
+type Distance = Double
+
+-- Part 1
 
 recordBreakingProduct :: FilePath -> IO Int
 recordBreakingProduct filename = do
     file <- readFile filename
-    pure $ product $ countRecordBreaks <$> parseInput file
+    pure $ product $ countRecordBreaks <$> parseRaces file
 
-parseInput :: String -> [(Time, Distance)]
-parseInput file = zip (fmap read timeLine) (fmap read distanceLine)
+-- Part 2
+
+recordBreakingRace :: FilePath -> IO Int
+recordBreakingRace filename = do
+    file <- readFile filename
+    pure $ countRecordBreaks $ parseSingleRace file
+
+-- Common to Part 1 and Part 2
+
+{-
+    d = distance, th = time_holding, tT = total_time
+    d = th * (tT - th)
+    d = - th ^ 2 + tT * th
+    0 = - th ^ 2 + tT * th - d
+    i.e. quadratic roots where a = -1, b = tT, c = -d
+-}
+countRecordBreaks :: (Time, Distance) -> Int
+countRecordBreaks (time, distance) =
+    let (x1, x2) = quadraticRoots (-1) time (-distance)
+     in ceiling x2 - floor x1 - 1
+
+-- Input parsing
+
+parseRaces :: String -> [(Time, Distance)]
+parseRaces file = zip (fmap read timeLine) (fmap read distanceLine)
   where
     fileLines = lines $ filter (not . liftA2 (||) isLetter isPunctuation) file
     timeLine = words $ head fileLines
     distanceLine = words $ fileLines !! 1
 
-countRecordBreaks :: (Time, Distance) -> Int
-countRecordBreaks (time, distance) = length $ filter (> distance) $ distanceTravelled time [0 .. time]
+parseSingleRace :: String -> (Time, Distance)
+parseSingleRace file = (read $ head l, read $ l !! 1)
+  where
+    l = filter isDigit <$> lines file
 
-distanceTravelled :: Int -> [Int] -> [Int]
-distanceTravelled totalTime holdTimes = do
-    holdTime <- holdTimes
-    pure $ (totalTime - holdTime) * holdTime
+-- Maths
 
--- distanceTravelled :: Int -> Int -> Int
--- distanceTravelled totalTime holdTime = (totalTime - holdTime) * holdTime
+quadraticRoots :: (Floating a) => a -> a -> a -> (a, a)
+quadraticRoots a b c =
+    ( (-b + discr) / (2 * a)
+    , (-b - discr) / (2 * a)
+    )
+  where
+    discr = sqrt ((b ** 2) - (4 * a * c))
