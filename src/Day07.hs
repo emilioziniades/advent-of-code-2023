@@ -50,9 +50,6 @@ totalWinnings' filename = do
     file <- readFile filename
     pure $ sum $ zipWith (*) [1 ..] $ snd <$> sortBy (compareHands scoreHand') (parseInput (JokerCard . parseCard) file)
 
--- 2.9 s
--- 0.2 s
-
 scoreHand' :: Hand' -> HandType
 scoreHand' hand
     | nJokers == 5 = FiveKind
