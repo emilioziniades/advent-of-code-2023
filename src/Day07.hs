@@ -56,7 +56,6 @@ scoreHand' hand
     | nJokers == 4 = FiveKind
     | nJokers == 3 && nonJokerHand == OnePair = FiveKind
     | nJokers == 3 && nonJokerHand == HighCard = FourKind
-    | nJokers == 0 = scoreHand $ fmap getCard hand
     | otherwise = maximum $ scoreHand <$> expandJokers (fmap getCard hand)
   where
     nonJokerCards = filter (== JokerCard Jack) hand
