@@ -27,6 +27,7 @@
                 ]))
             zlib
             just
+            watchexec
           ];
           shellHook = ''
             cyan=$(tput setaf 6)
