@@ -50,10 +50,21 @@ totalWinnings' filename = do
     file <- readFile filename
     pure $ sum $ zipWith (*) [1 ..] $ snd <$> sortBy (compareHands scoreHand') (parseInput (JokerCard . parseCard) file)
 
+-- 2.9 s
+-- 0.2 s
+
 scoreHand' :: Hand' -> HandType
 scoreHand' hand
-    | JokerCard Jack `elem` hand = maximum $ scoreHand <$> expandJokers (fmap getCard (sort hand))
-    | otherwise = scoreHand $ fmap getCard hand
+    | nJokers == 5 = FiveKind
+    | nJokers == 4 = FiveKind
+    | nJokers == 3 && nonJokerHand == OnePair = FiveKind
+    | nJokers == 3 && nonJokerHand == HighCard = FourKind
+    | nJokers == 0 = scoreHand $ fmap getCard hand
+    | otherwise = maximum $ scoreHand <$> expandJokers (fmap getCard hand)
+  where
+    nonJokerCards = filter (== JokerCard Jack) hand
+    nJokers = length nonJokerCards
+    nonJokerHand = scoreHand $ getCard <$> nonJokerCards
 
 expandJokers :: Hand -> [Hand]
 expandJokers [c1, c2, c3, c4, c5] = do
