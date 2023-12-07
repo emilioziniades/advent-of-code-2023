@@ -20,4 +20,14 @@ day07Tests =
                 actual <- totalWinnings "input/day_07.txt"
                 actual @?= 249748283
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- totalWinnings' "example/day_07.txt"
+                actual @?= 5905
+            , testCase "Input" $ do
+                getInput 7
+                actual <- totalWinnings' "input/day_07.txt"
+                actual @?= 248029057
+            ]
         ]
