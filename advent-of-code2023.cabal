@@ -21,6 +21,7 @@ library
         Day04
         Day05
         Day06
+        Day07
     build-depends:    base ^>=4.17.2.1
     hs-source-dirs:   src
     default-language: Haskell2010
@@ -41,6 +42,7 @@ test-suite advent-of-code2023-test
         Day04Test
         Day05Test
         Day06Test
+        Day07Test
     default-language:  Haskell2010
     type:              exitcode-stdio-1.0
     hs-source-dirs:    test

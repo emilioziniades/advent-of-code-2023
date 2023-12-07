@@ -1,5 +1,5 @@
 - group: { name: future, enabled: true }
-- group: { name: extra, enabled: true }
+- group: { name: extra, enabled: false }
 - group: { name: use-lens, enabled: true }
 - group: { name: use-th-quotes, enabled: true }
 - group: { name: generalise, enabled: true }
