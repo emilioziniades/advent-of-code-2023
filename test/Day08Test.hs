@@ -23,4 +23,13 @@ day08Tests =
                 actual <- countSteps "input/day_08.txt"
                 actual @?= 18157
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- countSimultaneousSteps "example/day_08_part2.txt"
+                actual @?= 6
+            , testCase "Input" $ do
+                actual <- countSimultaneousSteps "input/day_08.txt"
+                actual @?= 14299763833181
+            ]
         ]
