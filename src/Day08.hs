@@ -1,4 +1,4 @@
-module Day08 (countSteps, countSimultaneousSteps) where
+module Day08 (countSteps, countGhostSteps) where
 
 import Data.Char
 import Data.List
@@ -14,30 +14,30 @@ type Graph = Map.Map Key (String, String)
 countSteps :: FilePath -> IO Int
 countSteps filename = do
     file <- readFile filename
-    let (instrs, graph) = parseInput file
+    let (instructions, graph) = parseInput file
     let start = "AAA"
-    pure $ findZZZ (cycle instrs) graph start 0
+    pure $ findZZZ (cycle instructions) graph 0 start
 
-findZZZ :: [Instruction] -> Graph -> Key -> Int -> Int
+-- Part 2
+
+countGhostSteps :: FilePath -> IO Int
+countGhostSteps filename = do
+    file <- readFile filename
+    let (instructions, graph) = parseInput file
+    let allStarts = filter ("A" `isSuffixOf`) (Map.keys graph)
+    pure $ lcmList $ fmap (findZZZ (cycle instructions) graph 0) allStarts
+
+-- Common to Part 1 and 2
+
+findZZZ :: [Instruction] -> Graph -> Int -> Key -> Int
 findZZZ [] _ _ _ = error "instructions should cycle forever"
-findZZZ (instr : instrs) graph key n
+findZZZ (instruction : instructions) graph n key
     | "Z" `isSuffixOf` key = n
-    | otherwise = findZZZ instrs graph (step instr . unwrap $ Map.lookup key graph) n + 1
+    | otherwise = findZZZ instructions graph (n + 1) (step instruction . unwrap $ Map.lookup key graph)
   where
     step i = case i of
         L -> fst
         R -> snd
-
--- Part 2
-
-countSimultaneousSteps :: FilePath -> IO Int
-countSimultaneousSteps filename = do
-    file <- readFile filename
-    let (instrs, graph) = parseInput file
-    let allStarts = filter ("A" `isSuffixOf`) (Map.keys graph)
-    print allStarts
-    let allStepCounts = fmap (\k -> findZZZ (cycle instrs) graph k 0) allStarts
-    pure $ lcmList allStepCounts
 
 -- Input parsing
 
