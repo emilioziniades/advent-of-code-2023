@@ -18,6 +18,16 @@ day09Tests =
             , testCase "Input" $ do
                 getInput 9
                 actual <- extrapolateValues "input/day_09.txt"
-                actual @?= 0
+                actual @?= 1938731307
+            ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- extrapolateValuesBackwards "example/day_09.txt"
+                actual @?= 2
+            , testCase "Input" $ do
+                getInput 9
+                actual <- extrapolateValuesBackwards "input/day_09.txt"
+                actual @?= 948
             ]
         ]
