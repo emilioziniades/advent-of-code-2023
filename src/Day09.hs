@@ -16,7 +16,7 @@ findDifferences :: [[Int]] -> [[Int]]
 findDifferences [] = error "cannot find differences of an empty list"
 findDifferences lists@(l : _)
     | all (== 0) l = lists
-    | otherwise = findDifferences $ fmap (foldr1 (flip (-))) (windowsN 2 l) : lists
+    | otherwise = findDifferences $ fmap (foldr1 (flip (-))) (windows 2 l) : lists
 
 -- Part 2
 
