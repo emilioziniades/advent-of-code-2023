@@ -16,7 +16,7 @@ countSteps filename = do
     file <- readFile filename
     let (instructions, graph) = parseInput file
     let start = "AAA"
-    pure $ findZZZ (cycle instructions) graph 0 start
+    pure $ findEnd (cycle instructions) graph 0 start
 
 -- Part 2
 
@@ -25,15 +25,15 @@ countGhostSteps filename = do
     file <- readFile filename
     let (instructions, graph) = parseInput file
     let allStarts = filter ("A" `isSuffixOf`) (Map.keys graph)
-    pure $ lcmList $ fmap (findZZZ (cycle instructions) graph 0) allStarts
+    pure $ lcmList $ fmap (findEnd (cycle instructions) graph 0) allStarts
 
 -- Common to Part 1 and 2
 
-findZZZ :: [Instruction] -> Graph -> Int -> Key -> Int
-findZZZ [] _ _ _ = error "instructions should cycle forever"
-findZZZ (instruction : instructions) graph n key
+findEnd :: [Instruction] -> Graph -> Int -> Key -> Int
+findEnd [] _ _ _ = error "instructions should cycle forever"
+findEnd (instruction : instructions) graph n key
     | "Z" `isSuffixOf` key = n
-    | otherwise = findZZZ instructions graph (n + 1) (step instruction . unwrap $ Map.lookup key graph)
+    | otherwise = findEnd instructions graph (n + 1) (step instruction . unwrap $ Map.lookup key graph)
   where
     step i = case i of
         L -> fst
