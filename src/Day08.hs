@@ -3,6 +3,8 @@ module Day08 (countSteps, countGhostSteps) where
 import Data.Char
 import Data.List
 import qualified Data.Map as Map
+import Util.Maths
+import Util.Maybe
 
 data Instruction = L | R deriving (Show, Read)
 
@@ -57,12 +59,3 @@ parseInput file =
 
 isAlphaNumOrSpace :: Char -> Bool
 isAlphaNumOrSpace c = isAlphaNum c || isSpace c
-
-unwrap :: Maybe a -> a
-unwrap (Just x) = x
-unwrap Nothing = error "unwrapped nothing"
-
-lcmList :: (Integral a) => [a] -> a
-lcmList (n1 : n2 : ns) = lcmList (lcm n1 n2 : ns)
-lcmList [n] = n
-lcmList [] = error "an empty list has no lcm"

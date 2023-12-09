@@ -15,6 +15,7 @@ library
         Util.Fetch
         Util.Lists
         Util.Maths
+        Util.Maybe
         Day01
         Day02
         Day03
