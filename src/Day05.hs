@@ -83,7 +83,7 @@ parseSeeds :: String -> [Seed]
 parseSeeds seedsRow = read <$> words seedsRow
 
 parseSeedRanges :: String -> [SeedRange]
-parseSeedRanges seedsRow = parseSeedRange <$> windowsN 2 (words seedsRow)
+parseSeedRanges seedsRow = parseSeedRange <$> chunksN 2 (words seedsRow)
 
 parseSeedRange :: [String] -> SeedRange
 parseSeedRange [x, y] = SeedRange (read x) (read y)

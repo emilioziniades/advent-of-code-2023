@@ -48,5 +48,3 @@ parseSingleRace :: String -> (Time, Distance)
 parseSingleRace file = (read $ head l, read $ l !! 1)
   where
     l = filter isDigit <$> lines file
-
--- Maths
