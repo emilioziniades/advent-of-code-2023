@@ -1,5 +1,7 @@
 module Day09 (extrapolateValues, extrapolateValuesBackwards) where
 
+import Util.Lists
+
 -- Part 1
 
 extrapolateValues :: FilePath -> IO Int
@@ -30,11 +32,3 @@ extrapolateValueBackwards s = foldl1 (flip (-)) $ head <$> findDifferences (pure
 
 parseInput :: String -> [[Int]]
 parseInput file = fmap (fmap read) $ words <$> lines file
-
--- Utility
-
--- whereas chunksN do not overlap, these do.
-windowsN :: Int -> [a] -> [[a]]
-windowsN n xs
-    | length xs < n = []
-    | otherwise = take n xs : windowsN n (tail xs)

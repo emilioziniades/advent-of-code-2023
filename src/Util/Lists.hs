@@ -1,4 +1,4 @@
-module Util.Lists (splitOn, splitOn2, enumerate, windowsN) where
+module Util.Lists (splitOn, splitOn2, enumerate, chunksN, windowsN) where
 
 splitOn :: (Eq a) => a -> [a] -> [[a]]
 splitOn e list
@@ -16,6 +16,13 @@ splitOn2 e list = case span (/= e) list of
 enumerate :: [a] -> [(a, Int)]
 enumerate arr = zip arr [0 ..]
 
+-- non-overlapping subsequences of [a]
+chunksN :: Int -> [a] -> [[a]]
+chunksN _ [] = []
+chunksN n xs = take n xs : chunksN n (drop n xs)
+
+-- overlapping subsequences of [a]
 windowsN :: Int -> [a] -> [[a]]
-windowsN _ [] = []
-windowsN n xs = take n xs : windowsN n (drop n xs)
+windowsN n xs
+    | length xs < n = []
+    | otherwise = take n xs : windowsN n (tail xs)
