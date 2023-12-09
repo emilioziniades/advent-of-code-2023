@@ -29,6 +29,7 @@ day08Tests =
                 actual <- countGhostSteps "example/day_08_part2.txt"
                 actual @?= 6
             , testCase "Input" $ do
+                getInput 8
                 actual <- countGhostSteps "input/day_08.txt"
                 actual @?= 14299763833181
             ]
