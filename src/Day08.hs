@@ -3,8 +3,8 @@ module Day08 (countSteps, countGhostSteps) where
 import Data.Char
 import Data.List
 import qualified Data.Map as Map
+import Data.Maybe
 import Util.Maths
-import Util.Maybe
 
 data Instruction = L | R deriving (Show, Read)
 
@@ -35,7 +35,7 @@ findEnd :: [Instruction] -> Graph -> Int -> Key -> Int
 findEnd [] _ _ _ = error "instructions should cycle forever"
 findEnd (instruction : instructions) graph n key
     | "Z" `isSuffixOf` key = n
-    | otherwise = findEnd instructions graph (n + 1) (step instruction . unwrap $ Map.lookup key graph)
+    | otherwise = findEnd instructions graph (n + 1) (step instruction . fromJust $ Map.lookup key graph)
   where
     step i = case i of
         L -> fst
