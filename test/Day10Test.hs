@@ -23,4 +23,19 @@ day10Tests =
                 actual <- farthestLoopPoint "input/day_10.txt"
                 actual @?= 6882
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- countEnclosingLoop "example/day_10_part2.txt"
+                actual @?= 4
+            , testCase "Example Two" $ do
+                actual <- countEnclosingLoop "example/day_10_part2_2.txt"
+                actual @?= 4
+            , testCase "Example Three" $ do
+                actual <- countEnclosingLoop "example/day_10_part2_3.txt"
+                actual @?= 8
+            , testCase "Example Four" $ do
+                actual <- countEnclosingLoop "example/day_10_part2_4.txt"
+                actual @?= 10
+            ]
         ]

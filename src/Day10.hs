@@ -1,10 +1,12 @@
-module Day10 (farthestLoopPoint) where
+module Day10 (farthestLoopPoint, countEnclosingLoop) where
 
 import Data.Bifunctor
 
+import Data.Bits
 import Data.List
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
+import qualified Data.Set as Set
 import Data.Tuple
 import Util.Lists
 import Prelude hiding (Left, Right)
@@ -94,6 +96,94 @@ neighbour (Point x y) direction = case direction of
     Right -> Point x (y + 1)
     Down -> Point (x + 1) y
     Left -> Point x (y - 1)
+
+-- Part 2
+
+countEnclosingLoop :: FilePath -> IO Int
+countEnclosingLoop filename = do
+    file <- readFile filename
+    let grid = parseInput file
+    let start = findStart grid
+    let ds = findStartDirections grid start
+    let allLoopPipes = getAllLoopPipes grid start (fst ds)
+    let enumeratedRows = getEnumeratedRows (replaceSWithPipe file ds)
+    let rowCounts = findEnclosedInRow False allLoopPipes <$> enumeratedRows
+    print rowCounts
+    pure $ sum rowCounts
+
+replaceSWithPipe :: String -> (Direction, Direction) -> String
+replaceSWithPipe file directions = fmap replaceS file
+  where
+    replaceS c = if c == 'S' then pipeShape else c
+    pipeShape = getPipeShape directions
+
+getAllLoopPipes :: Grid -> Point -> Direction -> Set.Set Point
+getAllLoopPipes grid start direction = Set.fromList $ walkAllPipes grid start True (start, direction)
+
+walkAllPipes :: Grid -> Point -> Bool -> (Point, Direction) -> [Point]
+walkAllPipes grid startPoint atStart (point, direction)
+    | startPoint == point && not atStart = []
+    | otherwise = point : walkAllPipes grid startPoint False (step grid (point, direction))
+
+findEnclosedInRow :: Bool -> Set.Set Point -> [(Char, Point)] -> Int
+findEnclosedInRow _ _ [] = 0
+findEnclosedInRow isInside loopPipes row@(r : rs)
+    | isInside && not isLoopPipe = 1 + findEnclosedInRow isInside loopPipes rs
+    | not isInside && not isLoopPipe = 0 + findEnclosedInRow isInside loopPipes rs
+    | isLoopPipe && fst r == '|' = 0 + findEnclosedInRow (not isInside) loopPipes rs
+    | otherwise = 0 + findEnclosedInRow (xor (crossedEdge loopSegment) isInside) loopPipes rest
+  where
+    isLoopPipe = Set.member (snd r) loopPipes
+    (loopSegment, rest) = nextPipeSegment loopPipes row
+
+crossedEdge :: [(Char, Point)] -> Bool
+crossedEdge pipeSegment = case (fst $ head pipeSegment, fst $ last pipeSegment) of
+    ('F', '7') -> False
+    ('L', 'J') -> False
+    ('F', 'J') -> True
+    ('L', '7') -> True
+    _ -> error $ show pipeSegment <> " unrecognized pipe sequence"
+
+--
+nextPipeSegment :: Set.Set Point -> [(Char, Point)] -> ([(Char, Point)], [(Char, Point)])
+nextPipeSegment loopPipes (current@('|', pt) : rest) | Set.member pt loopPipes = (pure current, rest)
+nextPipeSegment loopPipes row = span isHorizontalLoopPipe row
+  where
+    isHorizontalLoopPipe (c, pt) = hasHorizontalComponent c && Set.member pt loopPipes
+
+hasHorizontalComponent :: Char -> Bool
+hasHorizontalComponent c = case c of
+    '-' -> True
+    'J' -> True
+    'L' -> True
+    '7' -> True
+    'F' -> True
+    '|' -> False
+    '.' -> False
+    _ -> error (c : ": unrecognized pipe shape")
+
+getEnumeratedRows :: String -> [[(Char, Point)]]
+getEnumeratedRows file = fmap rowToPoints cells
+  where
+    rows = enumerate (lines file)
+    cells = fmap (first enumerate) rows
+    rowToPoints (cs, row) = fmap (second (Point row)) cs
+
+getPipeShape :: (Direction, Direction) -> Char
+getPipeShape directions = case directions of
+    (Up, Down) -> '|'
+    (Down, Up) -> '|'
+    (Left, Right) -> '-'
+    (Right, Left) -> '-'
+    (Up, Right) -> 'L'
+    (Right, Up) -> 'L'
+    (Up, Left) -> 'J'
+    (Left, Up) -> 'J'
+    (Down, Left) -> '7'
+    (Left, Down) -> '7'
+    (Down, Right) -> 'F'
+    (Right, Down) -> 'F'
+    _ -> error $ "don't know how to replace " <> show directions
 
 -- Input parsing
 
