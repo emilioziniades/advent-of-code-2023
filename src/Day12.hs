@@ -1,20 +1,14 @@
 module Day12 (springArrangements) where
 
-import Data.Char
 import Data.List
 import Util.Lists
-
--- too low: 7672
 
 springArrangements :: FilePath -> IO Int
 springArrangements filename = do
     file <- readFile filename
-    -- print $ springArrangement <$> parseInput file
     pure $ sum $ springArrangement <$> parseInput file
 
 springArrangement :: (String, [Int]) -> Int
--- springArrangement (spring, _) | traceShow spring False = undefined
--- springArrangement (_, springId) | traceShow springId False = undefined
 springArrangement (spring, springId) = length $ filter (== springId) $ getSpringId <$> allPossibleSprings spring
 
 allPossibleSprings :: String -> [String]
@@ -33,10 +27,7 @@ possibleSpring c
     knownSprings = ['.', '#']
 
 getSpringId :: [Char] -> [Int]
--- getSpringId spring = trace (spring <> show theId) theId
-getSpringId spring = theId
-  where
-    theId = length <$> filter ("#" `isPrefixOf`) (group spring)
+getSpringId spring = length <$> filter ("#" `isPrefixOf`) (group spring)
 
 parseInput :: String -> [(String, [Int])]
 parseInput file = fmap parseRow (lines file)
@@ -44,6 +35,6 @@ parseInput file = fmap parseRow (lines file)
     parseRow row =
         let
             (spring, springIdRaw) = splitOn2 ' ' row
-            springId = digitToInt <$> filter isNumber springIdRaw
+            springId = read <$> splitOn ',' springIdRaw
          in
             (spring, springId)
