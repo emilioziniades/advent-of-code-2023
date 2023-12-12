@@ -37,5 +37,8 @@ day10Tests =
             , testCase "Example Four" $ do
                 actual <- countEnclosingLoop "example/day_10_part2_4.txt"
                 actual @?= 10
+            , testCase "Input" $ do
+                actual <- countEnclosingLoop "input/day_10.txt"
+                actual @?= 491
             ]
         ]

@@ -6,6 +6,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Tuple
+import Debug.Trace
 import Util.Lists
 import Prelude hiding (Left, Right)
 
@@ -102,13 +103,40 @@ countEnclosingLoop filename = do
     file <- readFile filename
     let grid = parseInput file
     let start = findStart grid
-    let ds = findStartDirections grid start
-    let allLoopPipes = getAllLoopPipes grid start (fst ds)
-    let enumeratedRows = getEnumeratedRows (replaceSWithPipe file ds)
-    pure 0
+    let directions = findStartDirections grid start
+    let loopPipes = getAllLoopPipes grid start (fst directions)
+    pure $ sum $ countEnclosed False . groupRow . replaceNonLoopPipes loopPipes <$> getEnumeratedRows (replaceStartWithPipe file directions)
 
-replaceSWithPipe :: String -> (Direction, Direction) -> String
-replaceSWithPipe file directions = fmap replaceS file
+countEnclosed :: Bool -> [[Char]] -> Int
+countEnclosed _ [] = 0
+countEnclosed isInside (segment : segments)
+    | isNonLoop && isInside = length segment + countEnclosed isInside segments
+    | isNonLoop = 0 + countEnclosed isInside segments
+    | edgeCrossed = 0 + countEnclosed (not isInside) segments
+    | otherwise = 0 + countEnclosed isInside segments
+  where
+    isNonLoop = all (== '.') segment
+    edgeCrossed =
+        segment == ['|']
+            || (head segment == 'F' && last segment == 'J')
+            || (head segment == 'L' && last segment == '7')
+
+replaceNonLoopPipes :: Set.Set Point -> [(Char, Point)] -> [Char]
+replaceNonLoopPipes loopPipes = fmap replaceNonLoopPipe
+  where
+    replaceNonLoopPipe (c, pt) = if Set.member pt loopPipes then c else '.'
+
+groupRow :: [Char] -> [[Char]]
+groupRow [] = []
+groupRow (c : cs)
+    | c `elem` ['.', '|', '7', 'J'] = pure c : groupRow cs
+    | c `elem` ['F', 'L'] = (c : segment) : groupRow nonSegment
+    | otherwise = traceShow (c, cs) $ error "groupRow: in a weird state"
+  where
+    (segment, nonSegment) = span (`elem` ['-', '7', 'J']) cs
+
+replaceStartWithPipe :: String -> (Direction, Direction) -> String
+replaceStartWithPipe file directions = fmap replaceS file
   where
     replaceS c = if c == 'S' then pipeShape else c
     pipeShape = getPipeShape directions
