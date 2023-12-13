@@ -18,6 +18,6 @@ day12Tests =
             , testCase "Input" $ do
                 getInput 12
                 actual <- springArrangements "input/day_12.txt"
-                actual @?= 0
+                actual @?= 7732
             ]
         ]
