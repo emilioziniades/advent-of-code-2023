@@ -7,18 +7,23 @@ import Util.Lists
 data Point = Point {getX :: Int, getY :: Int}
     deriving (Show, Eq, Ord)
 
-sumPaths :: FilePath -> IO Int
-sumPaths filename = do
+sumPaths :: Int -> FilePath -> IO Int
+sumPaths expansionFactor filename = do
     file <- readFile filename
-    let grid = transpose $ expandSpace $ transpose $ expandSpace $ lines file
-    let stars = snd <$> filter ((== '#') . fst) (enumerateGrid grid)
+    let grid = lines file
+    let expansionRows = expansions grid
+    let expansionCols = expansions (transpose grid)
+    let stars = adjustStar expansionFactor expansionRows expansionCols . snd <$> filter ((== '#') . fst) (enumerateGrid grid)
     pure $ (`div` 2) $ sum $ manhattan <$> stars <*> stars
 
-expandSpace :: [String] -> [String]
-expandSpace [] = []
-expandSpace (x : xs)
-    | '#' `elem` x = x : expandSpace xs
-    | otherwise = x : x : expandSpace xs
+expansions :: [String] -> [Int]
+expansions grid = snd <$> filter (('#' `notElem`) . fst) (enumerate grid)
+
+adjustStar :: Int -> [Int] -> [Int] -> Point -> Point
+adjustStar expansionFactor expansionRows expansionCols (Point x y) = Point (x + (expansionFactor - 1) * rowExps) (y + (expansionFactor - 1) * colExps)
+  where
+    rowExps = length $ takeWhile (< x) expansionRows
+    colExps = length $ takeWhile (< y) expansionCols
 
 enumerateGrid :: [String] -> [(Char, Point)]
 enumerateGrid grid = concat (enumerateRows grid)
