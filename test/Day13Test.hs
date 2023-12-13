@@ -18,6 +18,16 @@ day13Tests =
             , testCase "Input" $ do
                 getInput 13
                 actual <- findSymmetries "input/day_13.txt"
-                actual @?= 0
+                actual @?= 35538
+            ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- findSingleAsymmetries "example/day_13.txt"
+                actual @?= 400
+            , testCase "Input" $ do
+                getInput 13
+                actual <- findSingleAsymmetries "input/day_13.txt"
+                actual @?= 30442
             ]
         ]

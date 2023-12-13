@@ -1,4 +1,4 @@
-module Day13 (findSymmetries) where
+module Day13 (findSymmetries, findSingleAsymmetries) where
 
 import Data.List
 import Util.Lists (splitOn)
@@ -9,27 +9,40 @@ findSymmetries :: FilePath -> IO Int
 findSymmetries filename = do
     file <- readFile filename
     let input = parseInput file
-    pure $ sum $ findSymmetrySummary <$> input
+    pure $ sum $ findAsymmetrySummary 0 <$> input
 
-findSymmetrySummary :: [String] -> Int
-findSymmetrySummary grid = findSymmetry possibleSymmetryT + 100 * findSymmetry possibleSymmetry
+-- Part 2
+
+findSingleAsymmetries :: FilePath -> IO Int
+findSingleAsymmetries filename = do
+    file <- readFile filename
+    let input = parseInput file
+    pure $ sum $ findAsymmetrySummary 1 <$> input
+
+-- Common to Part 1 and Part 2
+
+findAsymmetrySummary :: Int -> [String] -> Int
+findAsymmetrySummary nAsymmetries grid = findAsymmetry nAsymmetries possibleSymmetryT + 100 * findAsymmetry nAsymmetries possibleSymmetry
   where
     gridT = transpose grid
     possibleSymmetry = fmap (`splitAt` grid) [0 .. length grid]
     possibleSymmetryT = fmap (`splitAt` gridT) [0 .. length gridT]
 
-findSymmetry :: [([String], [String])] -> Int
-findSymmetry [] = 0
-findSymmetry ((l1, l2) : ls)
-    | bothNotEmpty && isSymmetrical = n1
-    | otherwise = findSymmetry ls
+findAsymmetry :: Int -> [([String], [String])] -> Int
+findAsymmetry _ [] = 0
+findAsymmetry n ((l1, l2) : ls)
+    | bothNotEmpty && nAsymmetries == n = n1
+    | otherwise = findAsymmetry n ls
   where
     n1 = length l1
     n2 = length l2
     smallerN = min n1 n2
     bothNotEmpty = smallerN > 0
     (bl1, bl2) = (drop (n1 - smallerN) l1, take smallerN l2)
-    isSymmetrical = bl1 == reverse bl2
+    nAsymmetries = countAsymmetries (bl1, reverse bl2)
+
+countAsymmetries :: ([String], [String]) -> Int
+countAsymmetries (l1, l2) = length $ filter not $ concat $ zipWith (zipWith (==)) l1 l2
 
 -- Input parsing
 
