@@ -10,6 +10,7 @@ import Day07Test
 import Day08Test
 import Day09Test
 import Day10Test
+import Day11Test
 import Day12Test
 import Day13Test
 
@@ -30,6 +31,7 @@ tests =
         , day08Tests
         , day09Tests
         , day10Tests
+        , day11Tests
         , day12Tests
         , day13Tests
         ]
