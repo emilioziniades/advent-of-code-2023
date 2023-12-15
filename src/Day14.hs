@@ -14,7 +14,7 @@ data Direction = North | West | South | East
 measureLoad :: FilePath -> IO Int
 measureLoad filename = do
     file <- readFile filename
-    pure $ totalLoad $ flip tilt North $ lines file
+    pure $ totalLoad $ tilt North $ lines file
 
 -- Part 2
 
@@ -22,36 +22,35 @@ measureLoadWithCycles :: FilePath -> IO Int
 measureLoadWithCycles filename = do
     file <- readFile filename
     let nCycles = 1000000000
-    pure $ totalLoad $ tiltNTimesWithCycle (nCycles * 4) (lines file) (cycle [North .. East])
+    pure $ totalLoad $ tiltNTimesWithCycle nCycles (lines file)
 
-tiltNTimesWithCycle :: Int -> [String] -> [Direction] -> [String]
-tiltNTimesWithCycle n grid directions = foldl tilt firstRepeat ds
+tiltNTimesWithCycle :: Int -> [String] -> [String]
+tiltNTimesWithCycle n grid = iterate tiltCycle firstRepeat !! (n2 - 1)
   where
-    (firstRepeat, uniqueCycles) = fromJust $ uncons $ tiltUntilCycle Map.empty 0 grid directions
+    (firstRepeat, uniqueCycles) = fromJust $ uncons $ tiltUntilCycle Map.empty 0 grid
     (gr, g0) = splitAt (1 + fromJust (elemIndex firstRepeat uniqueCycles)) uniqueCycles
     n0 = length g0
     nr = length gr
-    r = div (n - n0) nr
-    n1 = r * nr
     n2 = mod (n - n0) nr
-    ds = take n2 $ drop ((n0 + n1) `rem` 4) directions
 
-tiltUntilCycle :: Map.Map [String] Int -> Int -> [String] -> [Direction] -> [[String]]
-tiltUntilCycle cache n g (d : ds)
+tiltUntilCycle :: Map.Map [String] Int -> Int -> [String] -> [[String]]
+tiltUntilCycle cache n g
     | seenBefore = newG : fmap fst (sortBy (\(_, a) (_, b) -> compare b a) $ Map.toList cache)
-    | otherwise = tiltUntilCycle (Map.insert newG n cache) (n + 1) newG ds
+    | otherwise = tiltUntilCycle (Map.insert newG n cache) (n + 1) newG
   where
-    newG = tilt g d
+    newG = tiltCycle g
     seenBefore = Map.member newG cache
-tiltUntilCycle _ _ _ _ = error "grids list should always grow"
+
+tiltCycle :: [String] -> [String]
+tiltCycle grid = tilt East $ tilt South $ tilt West $ tilt North grid
 
 -- Common to Part 1 and Part 2
 
-tilt :: [String] -> Direction -> [String]
-tilt grid North = transpose $ rollRowLeft <$> transpose grid
-tilt grid West = rollRowLeft <$> grid
-tilt grid South = transpose $ rollRowRight <$> transpose grid
-tilt grid East = rollRowRight <$> grid
+tilt :: Direction -> [String] -> [String]
+tilt North grid = transpose $ rollRowLeft <$> transpose grid
+tilt West grid = rollRowLeft <$> grid
+tilt South grid = transpose $ rollRowRight <$> transpose grid
+tilt East grid = rollRowRight <$> grid
 
 rollRowLeft :: String -> String
 rollRowLeft row = intercalate "#" $ sortBy (flip compare) <$> splitOn '#' row
