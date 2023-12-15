@@ -25,5 +25,9 @@ day14Tests =
             [ testCase "Example" $ do
                 actual <- measureLoadWithCycles "example/day_14.txt"
                 actual @?= 64
+            , testCase "Input" $ do
+                getInput 14
+                actual <- measureLoadWithCycles "input/day_14.txt"
+                actual @?= 97241
             ]
         ]
