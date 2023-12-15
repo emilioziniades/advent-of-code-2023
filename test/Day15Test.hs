@@ -20,4 +20,14 @@ day15Tests =
                 actual <- sumHashes "input/day_15.txt"
                 actual @?= 497373
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- configureBoxes "example/day_15.txt"
+                actual @?= 145
+                -- , testCase "Input" $ do
+                --     getInput 15
+                --     actual <- sumHashes "input/day_15.txt"
+                --     actual @?= 497373
+            ]
         ]
