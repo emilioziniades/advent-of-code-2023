@@ -1,9 +1,7 @@
 module Day15 (sumHashes, configureBoxes) where
 
-import Data.Bifunctor
 import Data.Char (digitToInt, isSpace, ord)
 import qualified Data.Map as Map
-import Debug.Trace (traceId, traceShow)
 import Util.Lists (enumerate, splitOn)
 
 type BoxId = Int
@@ -32,33 +30,35 @@ configureBoxes :: FilePath -> IO Int
 configureBoxes filename = do
     file <- readFile filename
     let actions = parseAction <$> parseInput file
-    print actions
-    let boxes = Map.empty
-    pure $ focusingPower $ foldl updateBoxes boxes actions
+    pure $ focusingPower $ foldl updateBoxes Map.empty actions
 
 parseAction :: String -> Action
-parseAction action = traceShow action $ case reverse action of
-    x : '=' : label -> Insert (hash (reverse label)) (Lens label (digitToInt x))
-    '-' : label -> Remove (hash (reverse label)) label
+parseAction action = case reverse action of
+    x : '=' : label -> Insert (hash (reverse label)) (Lens (reverse label) (digitToInt x))
+    '-' : label -> Remove (hash (reverse label)) (reverse label)
     y -> error (y <> ": malformed action")
 
 updateBoxes :: Boxes -> Action -> Boxes
-updateBoxes _ action | traceShow action False = undefined
-updateBoxes boxes _ | traceShow boxes False = undefined
 updateBoxes boxes (Remove boxId label) = Map.adjust (filter ((/= label) . getLabel)) boxId boxes
-updateBoxes boxes (Insert boxId (Lens label focalLength)) = Map.adjust (insertLens label focalLength) boxId boxes
+updateBoxes boxes (Insert boxId lens) = Map.insertWith insertLens boxId [lens] boxes
 
-insertLens :: Label -> FocalLength -> [Lens] -> [Lens]
-insertLens label focalLength lenses =
-    if any ((== label) . getLabel) lenses
-        then error "haven't figured this out yet"
-        else lenses <> [Lens label focalLength]
+insertLens :: [Lens] -> [Lens] -> [Lens]
+insertLens [lens] lenses =
+    if any ((== getLabel lens) . getLabel) lenses
+        then replaceLens lens lenses
+        else lenses <> [lens]
+insertLens _ _ = error "can only insert one lens at a time"
+
+replaceLens :: Lens -> [Lens] -> [Lens]
+replaceLens newLens (oldLens : lenses)
+    | getLabel newLens == getLabel oldLens = newLens : lenses
+    | otherwise = oldLens : replaceLens newLens lenses
+replaceLens _ [] = []
 
 lensFocusingPower :: (Int, Int, Int) -> Int
 lensFocusingPower (iBox, iLens, focalLength) = (1 + iBox) * (1 + iLens) * focalLength
 
 focusingPower :: Boxes -> Int
-focusingPower boxes | traceShow boxes False = undefined
 focusingPower boxes = sum $ lensFocusingPower <$> concatMap flattenBox (Map.toList boxes)
 
 flattenBox :: (BoxId, [Lens]) -> [(BoxId, LensId, FocalLength)]
