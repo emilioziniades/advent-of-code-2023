@@ -9,13 +9,17 @@ build-type:         Simple
 common warnings
     ghc-options: -Wall
 
+common asserts
+    ghc-options: -fno-ignore-asserts
+
 library
-    import:           warnings
+    import:
+        warnings,
+        asserts
     exposed-modules:  
         Util.Fetch
         Util.Lists
         Util.Maths
-        Util.Debug
         Day01
         Day02
         Day03
