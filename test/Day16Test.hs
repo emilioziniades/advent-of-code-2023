@@ -4,6 +4,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Day16
+import Util.Fetch
 
 day16Tests :: TestTree
 day16Tests =
@@ -13,6 +14,10 @@ day16Tests =
             "Part 1"
             [ testCase "Example" $ do
                 actual <- energizedSquares "example/day_16.txt"
-                actual @?= 1320
+                actual @?= 46
+                -- , testCase "Input" $ do
+                --     getInput 16
+                --     actual <- energizedSquares "input/day_16.txt"
+                --     actual @?= 0
             ]
         ]
