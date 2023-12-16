@@ -7,13 +7,11 @@ import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Tuple
 import Debug.Trace
+import Util.Grid
 import Util.Lists
 import Prelude hiding (Left, Right)
 
 type Grid = Map.Map Point Char
-
-data Point = Point {getX :: Int, getY :: Int}
-    deriving (Show, Eq, Ord)
 
 data Direction = Up | Right | Down | Left
     deriving (Show, Eq, Ord)

@@ -20,6 +20,7 @@ library
         Util.Fetch
         Util.Lists
         Util.Maths
+        Util.Grid
         Day01
         Day02
         Day03

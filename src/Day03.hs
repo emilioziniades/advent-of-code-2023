@@ -3,10 +3,8 @@ module Day03 (sumPartNumbers, sumGearRatios) where
 import Data.Char (isNumber)
 import Data.List
 import qualified Data.Map as Map
+import Util.Grid
 import Util.Lists
-
-data Point = Point {getX :: Int, getY :: Int}
-    deriving (Show, Eq, Ord)
 
 data Range = Range Point Point
     deriving (Show)
