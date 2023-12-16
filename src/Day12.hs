@@ -1,7 +1,10 @@
-module Day12 (springArrangements) where
+module Day12 (springArrangements, largeSpringArrangements) where
 
 import Data.List
+import Debug.Trace
 import Util.Lists
+
+-- Part 1
 
 springArrangements :: FilePath -> IO Int
 springArrangements filename = do
@@ -28,6 +31,20 @@ possibleSpring c
 
 getSpringId :: [Char] -> [Int]
 getSpringId spring = length <$> filter ("#" `isPrefixOf`) (group spring)
+
+-- Part 2
+
+largeSpringArrangements :: FilePath -> IO Int
+largeSpringArrangements filename = do
+    file <- readFile filename
+    print ""
+    mapM_ print $ unfoldRow <$> parseInput file
+    pure 0
+
+unfoldRow :: (String, [Int]) -> (String, [Int])
+unfoldRow (spring, springId) = (intercalate "?" $ replicate 5 spring, concat $ replicate 5 springId)
+
+-- Input parsing
 
 parseInput :: String -> [(String, [Int])]
 parseInput file = fmap parseRow (lines file)
