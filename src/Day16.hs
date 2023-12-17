@@ -2,6 +2,8 @@ module Day16 (energizedSquares) where
 
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Sequence (Seq (..), (|>))
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Util.Grid
 import Prelude hiding (Left, Right)
@@ -9,20 +11,22 @@ import Prelude hiding (Left, Right)
 data Direction = Right | Down | Left | Up
     deriving (Eq, Ord, Show)
 
+-- Part 1
+
 energizedSquares :: FilePath -> IO Int
 energizedSquares filename = do
     file <- readFile filename
     let grid = gridMap (lines file)
-    pure $ Set.size $ Set.fromList $ fst <$> Set.toList (followBeams grid Set.empty [(Point 0 0, Right)])
+    pure $ Set.size $ Set.fromList $ fst <$> Set.toList (followBeams grid Set.empty (Seq.singleton (Point 0 0, Right)))
 
-followBeams :: Map.Map Point Char -> Set.Set (Point, Direction) -> [(Point, Direction)] -> Set.Set (Point, Direction)
-followBeams _ visited [] = visited
-followBeams grid visited (q@(pt, d) : qs) = followBeams grid newVisited queue
+followBeams :: Map.Map Point Char -> Set.Set (Point, Direction) -> Seq.Seq (Point, Direction) -> Set.Set (Point, Direction)
+followBeams _ visited Seq.Empty = visited
+followBeams grid visited (q@(pt, d) :<| qs) = followBeams grid newVisited queue
   where
     newVisited = Set.insert q visited
     cell = fromJust $ Map.lookup pt grid
     nextPoints = filter (`Set.notMember` visited) $ filter (flip Map.member grid . fst) $ getNextPoints pt d cell
-    queue = qs <> nextPoints
+    queue = foldl (|>) qs nextPoints
 
 getNextPoints :: Point -> Direction -> Char -> [(Point, Direction)]
 getNextPoints (Point x y) direction char =
