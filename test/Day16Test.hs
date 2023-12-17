@@ -15,9 +15,9 @@ day16Tests =
             [ testCase "Example" $ do
                 actual <- energizedSquares "example/day_16.txt"
                 actual @?= 46
-                -- , testCase "Input" $ do
-                --     getInput 16
-                --     actual <- energizedSquares "input/day_16.txt"
-                --     actual @?= 0
+            , testCase "Input" $ do
+                getInput 16
+                actual <- energizedSquares "input/day_16.txt"
+                actual @?= 6906
             ]
         ]

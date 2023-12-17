@@ -3,7 +3,6 @@ module Day16 (energizedSquares) where
 import qualified Data.Map as Map
 import Data.Maybe
 import qualified Data.Set as Set
-import Debug.Trace
 import Util.Grid
 import Prelude hiding (Left, Right)
 
@@ -14,18 +13,18 @@ energizedSquares :: FilePath -> IO Int
 energizedSquares filename = do
     file <- readFile filename
     let grid = gridMap (lines file)
-    pure $ Set.size $ Set.fromList $ fst <$> followBeams grid Set.empty (Point 0 0, Right)
+    pure $ Set.size $ Set.fromList $ fst <$> Set.toList (followBeams grid Set.empty [(Point 0 0, Right)])
 
-followBeams :: Map.Map Point Char -> Set.Set (Point, Direction) -> (Point, Direction) -> [(Point, Direction)]
-followBeams grid visited (point, direction) = (point, direction) : concatMap (followBeams grid newVisited) nextPoints
+followBeams :: Map.Map Point Char -> Set.Set (Point, Direction) -> [(Point, Direction)] -> Set.Set (Point, Direction)
+followBeams _ visited [] = visited
+followBeams grid visited (q@(pt, d) : qs) = followBeams grid newVisited queue
   where
-    cell = fromJust $ Map.lookup point grid
-    nextPoints = filter (`Set.notMember` visited) $ filter (flip Map.member grid . fst) $ getNextPoints point direction cell
-    newVisited = Set.insert (point, direction) visited
+    newVisited = Set.insert q visited
+    cell = fromJust $ Map.lookup pt grid
+    nextPoints = filter (`Set.notMember` visited) $ filter (flip Map.member grid . fst) $ getNextPoints pt d cell
+    queue = qs <> nextPoints
 
 getNextPoints :: Point -> Direction -> Char -> [(Point, Direction)]
--- getNextPoints pt direction char | traceShow (pt, direction, char) False = undefined
--- getNextPoints _ _ _ = []
 getNextPoints (Point x y) direction char =
     let
         right = (Point x (y + 1), Right)
