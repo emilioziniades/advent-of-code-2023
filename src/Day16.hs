@@ -1,4 +1,4 @@
-module Day16 (energizedSquares) where
+module Day16 (energizedSquares, maximumEnergy) where
 
 import qualified Data.Map as Map
 import Data.Maybe
@@ -17,7 +17,31 @@ energizedSquares :: FilePath -> IO Int
 energizedSquares filename = do
     file <- readFile filename
     let grid = gridMap (lines file)
-    pure $ Set.size $ Set.fromList $ fst <$> Set.toList (followBeams grid Set.empty (Seq.singleton (Point 0 0, Right)))
+    pure $ countEnergizedSqures grid (Point 0 0, Right)
+
+-- Part 2
+
+maximumEnergy :: FilePath -> IO Int
+maximumEnergy filename = do
+    file <- readFile filename
+    let rawGrid = lines file
+    let grid = gridMap rawGrid
+    pure $ maximum $ fmap (countEnergizedSqures grid) (getAllStarts rawGrid)
+
+getAllStarts :: [String] -> [(Point, Direction)]
+getAllStarts rawGrid = topStarts <> leftStarts <> rightStarts <> bottomStarts
+  where
+    cols = length (head rawGrid) - 1
+    rows = length rawGrid - 1
+    topStarts = fmap (\n -> (Point 0 n, Down)) [0 .. cols]
+    leftStarts = fmap (\n -> (Point n 0, Right)) [0 .. rows]
+    rightStarts = fmap (\n -> (Point n cols, Left)) [0 .. rows]
+    bottomStarts = fmap (\n -> (Point rows n, Up)) [0 .. cols]
+
+-- Common to Part 1 and Part 2
+
+countEnergizedSqures :: Map.Map Point Char -> (Point, Direction) -> Int
+countEnergizedSqures grid start = Set.size $ Set.fromList $ fst <$> Set.toList (followBeams grid Set.empty (Seq.singleton start))
 
 followBeams :: Map.Map Point Char -> Set.Set (Point, Direction) -> Seq.Seq (Point, Direction) -> Set.Set (Point, Direction)
 followBeams _ visited Seq.Empty = visited

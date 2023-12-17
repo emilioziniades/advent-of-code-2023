@@ -20,4 +20,13 @@ day16Tests =
                 actual <- energizedSquares "input/day_16.txt"
                 actual @?= 6906
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- maximumEnergy "example/day_16.txt"
+                actual @?= 51
+            , testCase "Input" $ do
+                actual <- maximumEnergy "input/day_16.txt"
+                actual @?= 7330
+            ]
         ]
