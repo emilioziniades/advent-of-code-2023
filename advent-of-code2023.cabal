@@ -37,6 +37,7 @@ library
         Day14
         Day15
         Day16
+        Day17
     hs-source-dirs:   src
     default-language: Haskell2010
     build-depends:
@@ -46,6 +47,7 @@ library
         directory >= 1.3.7 && < 1.4,
         dotenv >= 0.11.0 && < 0.12,
         req >= 3.13.1 && < 3.14,
+        PSQueue >= 1.2.0 && < 1.3
 
 test-suite advent-of-code2023-test
     import:            warnings
@@ -66,6 +68,7 @@ test-suite advent-of-code2023-test
         Day14Test
         Day15Test
         Day16Test
+        Day17Test
     default-language:  Haskell2010
     type:              exitcode-stdio-1.0
     hs-source-dirs:    test

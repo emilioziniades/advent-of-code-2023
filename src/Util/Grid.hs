@@ -8,13 +8,13 @@ import Util.Lists
 data Point = Point {getX :: Int, getY :: Int}
     deriving (Show, Eq, Ord)
 
-gridMap :: [String] -> Map.Map Point Char
+gridMap :: [[a]] -> Map.Map Point a
 gridMap grid = Map.fromList (enumerateGrid grid)
 
-enumerateGrid :: [String] -> [(Point, Char)]
+enumerateGrid :: [[a]] -> [(Point, a)]
 enumerateGrid grid = concat (enumerateRows grid)
 
-enumerateRows :: [String] -> [[(Point, Char)]]
+enumerateRows :: [[a]] -> [[(Point, a)]]
 enumerateRows grid = fmap rowToPoints cells
   where
     rows = enumerate grid
