@@ -20,4 +20,14 @@ day18Tests =
                 actual <- lagoonArea "input/day_18.txt"
                 actual @?= 53844
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- hexLagoonArea "example/day_18.txt"
+                actual @?= 952408144115
+            , testCase "Input" $ do
+                getInput 18
+                actual <- hexLagoonArea "input/day_18.txt"
+                actual @?= 42708339569950
+            ]
         ]

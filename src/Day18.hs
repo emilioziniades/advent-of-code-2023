@@ -1,7 +1,8 @@
-module Day18 (lagoonArea) where
+module Day18 (lagoonArea, hexLagoonArea) where
 
+import Data.Char (isAlphaNum)
 import Data.Complex
-import Data.List
+import Numeric
 import Util.Lists
 
 data Direction = U | R | D | L
@@ -10,19 +11,44 @@ data Direction = U | R | D | L
 lagoonArea :: FilePath -> IO Int
 lagoonArea filename = do
     file <- readFile filename
-    -- print file
-    let input = parseInput file
-    let corners = getCorners input (0 :+ 0)
-    let perimeter = getPerimeter corners
-    let innerArea = shoelace corners
-    print ("inner area" <> show innerArea)
-    pure (pickTheorem innerArea perimeter)
+    pure $ measureLagoonArea (parseInput file) (0 :+ 0)
 
 parseInput :: String -> [(Direction, Int)]
 parseInput file = parseRow . words <$> lines file
   where
     parseRow (d : i : _) = (read d, read i)
     parseRow _ = error "malformed input row"
+
+-- Part 2
+
+hexLagoonArea :: FilePath -> IO Int
+hexLagoonArea filename = do
+    file <- readFile filename
+    pure $ measureLagoonArea (parseHexInput file) (0 :+ 0)
+
+parseHexInput :: String -> [(Direction, Int)]
+parseHexInput file = parseHexRow <$> lines file
+
+parseHexRow :: String -> (Direction, Int)
+parseHexRow row = (directionFromChar c, fst $ head $ readHex ns)
+  where
+    hex = filter isAlphaNum $ last $ words row
+    (ns, c) = (init hex, last hex)
+    directionFromChar char = case char of
+        '0' -> R
+        '1' -> D
+        '2' -> L
+        '3' -> U
+        _ -> error "char cannot become direction"
+
+--
+
+measureLagoonArea :: [(Direction, Int)] -> Complex Int -> Int
+measureLagoonArea directions start = pickTheorem innerArea perimeter
+  where
+    corners = getCorners directions start
+    perimeter = getPerimeter corners
+    innerArea = shoelace corners
 
 getStep :: Direction -> Int -> Complex Int
 getStep U n = 0 :+ n
