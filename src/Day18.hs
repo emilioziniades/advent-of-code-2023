@@ -8,6 +8,8 @@ import Util.Lists
 data Direction = U | R | D | L
     deriving (Show, Read, Eq, Ord)
 
+-- Part 1
+
 lagoonArea :: FilePath -> IO Int
 lagoonArea filename = do
     file <- readFile filename
@@ -41,7 +43,7 @@ parseHexRow row = (directionFromChar c, fst $ head $ readHex ns)
         '3' -> U
         _ -> error "char cannot become direction"
 
---
+-- Common to Part 1 and 2
 
 measureLagoonArea :: [(Direction, Int)] -> Complex Int -> Int
 measureLagoonArea directions start = pickTheorem innerArea perimeter
@@ -66,10 +68,12 @@ getCorners steps start = scanl step start steps
     step pt (d, i) = getStep d i `add` pt
 
 getPerimeter :: [Complex Int] -> Int
-getPerimeter corners = round $ sum $ distance <$> windows 2 corners
+getPerimeter corners = sum $ distance <$> windows 2 corners
 
-distance :: [Complex Int] -> Double
-distance [r1 :+ i1, r2 :+ i2] = sqrt ((fromIntegral r1 - fromIntegral r2) ** 2 + (fromIntegral i1 - fromIntegral i2) ** 2)
+distance :: [Complex Int] -> Int
+distance [r1 :+ i1, r2 :+ i2]
+    | r1 == r2 = abs (i1 - i2)
+    | i1 == i2 = abs (r1 - r2)
 distance _ = error "expecting a list with two complex numbers"
 
 shoelace :: [Complex Int] -> Int
