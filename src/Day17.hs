@@ -4,51 +4,78 @@ module Day17 (minimizeHeatLoss) where
 
 import Data.Char (digitToInt)
 import qualified Data.Map as Map
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing)
 import qualified Data.PSQueue as PSQ
-import Debug.Trace (trace)
+import Debug.Trace
 import Util.Grid (Point (Point), gridMap)
 import Prelude hiding (Left, Right)
 
 data Direction = Right | Up | Left | Down
     deriving (Show, Eq, Ord)
 
+type StraightCount = Int
+type Node = (Point, Direction, StraightCount)
+type Frontier = PSQ.PSQ Node Int
+type CameFrom = Map.Map Point (Maybe Point)
+type CostSoFar = Map.Map Point Int
+type Goal = Point
+type Grid = Map.Map Point Int
+
+-- Part 1
+
 minimizeHeatLoss :: FilePath -> IO Int
 minimizeHeatLoss filename = do
     file <- readFile filename
-    let grid = gridMap $ parseGrid file
-    let rawGrid = lines file
-    let goal = Point (length rawGrid - 1) (length (head rawGrid) - 1)
-    let startNode = (Point 0 0, Right, 0)
-    let costs = breadthFirst grid goal (PSQ.singleton startNode 0) Map.empty (Map.singleton startNode 0)
-    print $ Map.filterWithKey (\k _ -> fst3 k == goal) costs
-    pure 0
+    let (n, cameFrom) = findShortestPath file
+    let path = recreatePath (Point 12 12) cameFrom
+    print $ fromJust <$> reverse path
+    pure n
 
-parseGrid :: String -> [[Int]]
-parseGrid file = fmap (fmap digitToInt) (lines file)
-
-type StraightCount = Int
-type Node = (Point, Direction, StraightCount)
-
-breadthFirst :: Map.Map Point Int -> Point -> PSQ.PSQ Node Int -> Map.Map Node Node -> Map.Map Node Int -> Map.Map Node Int
-breadthFirst grid goal queue cameFrom costSoFar
-    | PSQ.null queue = trace "queue is depleted" costSoFar
-    | fst3 (PSQ.key current) == goal = trace "found goal" costSoFar
-    | otherwise = breadthFirst grid goal newQueue newCameFrom newCostSoFar
+findShortestPath :: String -> (Int, CameFrom)
+findShortestPath file = runAStar grid startNode endPoint
   where
-    (current, restQueue) = fromJust $ PSQ.minView queue
+    rawGrid = lines file
+    grid = gridMap (parseGrid file)
+    endPoint = Point (length rawGrid - 1) (length (head rawGrid) - 1)
+    startNode = (Point 0 0, Right, 0)
+
+runAStar :: Grid -> Node -> Goal -> (Int, CameFrom)
+runAStar grid startNode endPoint =
+    aStar
+        grid
+        endPoint
+        (PSQ.singleton startNode 0)
+        (Map.singleton startPoint Nothing)
+        (Map.singleton startPoint 0)
+  where
+    startPoint = fst3 startNode
+
+aStar :: Grid -> Goal -> Frontier -> CameFrom -> CostSoFar -> (Int, CameFrom)
+aStar grid endPoint queue cameFrom costSoFar
+    | PSQ.null queue = error "queue exhausted before target reached"
+    | currentPoint == endPoint = (fromJust $ Map.lookup endPoint costSoFar, cameFrom)
+    | otherwise = traceShow current $ aStar grid endPoint newQueue newCameFrom newCostSoFar
+  where
+    (current, restQueue) = fromJust (PSQ.minView queue)
     currentNode = PSQ.key current
-    nextNodes = filter (`Map.notMember` cameFrom) $ filter (flip Map.member grid . fst3) $ getNextNodes currentNode
-    nextCosts = fmap (getNewCost grid costSoFar currentNode) nextNodes
-    newQueue = foldl (\q (n, p) -> PSQ.insert n p q) restQueue nextCosts
-    newCostSoFar = foldr (\(n, c) cs -> Map.insert n c cs) costSoFar nextCosts
-    newCameFrom = foldr (`Map.insert` currentNode) cameFrom nextNodes
+    currentPoint = fst3 currentNode
+    nextNodes = filter (\n -> Map.member (fst3 n) grid) $ getNextNodes currentNode
+    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps grid currentNode) (restQueue, cameFrom, costSoFar) nextNodes
 
-getNewCost :: Map.Map Point Int -> Map.Map Node Int -> Node -> Node -> (Node, Int)
-getNewCost grid costSoFar current next = (next, currentCost + nextCost)
+updateMaps :: Grid -> Node -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
+updateMaps grid current next (frontier, cameFrom, costSoFar)
+    | Map.notMember nextPoint costSoFar || newCost < existingNewCost = (newFrontier, newCameFrom, newCostSoFar)
+    | otherwise = (frontier, cameFrom, costSoFar)
   where
-    currentCost = fromJust $ Map.lookup current costSoFar
-    nextCost = fromJust $ Map.lookup (fst3 next) grid
+    currentPoint = fst3 current
+    nextPoint = traceShow next $ fst3 next
+    currentCost = fromJust $ Map.lookup currentPoint costSoFar
+    nextCost = fromJust $ Map.lookup nextPoint grid
+    newCost = currentCost + nextCost
+    existingNewCost = fromJust $ Map.lookup nextPoint costSoFar
+    newFrontier = PSQ.insert next newCost frontier
+    newCameFrom = Map.insert nextPoint (Just currentPoint) cameFrom
+    newCostSoFar = Map.insert nextPoint newCost costSoFar
 
 getNextNodes :: Node -> [Node]
 getNextNodes (Point x y, direction, straightCount)
@@ -67,6 +94,20 @@ getNextNodes (Point x y, direction, straightCount)
     right = (Point x (y + 1),Right,)
     up = (Point (x - 1) y,Up,)
     down = (Point (x + 1) y,Down,)
+
+recreatePath :: Point -> CameFrom -> [Maybe Point]
+recreatePath currentPoint cameFrom
+    | isNothing prevPoint = []
+    | otherwise = prevPoint : recreatePath (fromJust prevPoint) cameFrom
+  where
+    prevPoint = fromJust (Map.lookup currentPoint cameFrom)
+
+-- Input parsing
+
+parseGrid :: String -> [[Int]]
+parseGrid file = fmap (fmap digitToInt) (lines file)
+
+-- Utility
 
 fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x
