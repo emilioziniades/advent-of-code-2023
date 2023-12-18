@@ -3,7 +3,6 @@ module Day18 (lagoonArea, hexLagoonArea) where
 import Data.Char (isAlphaNum)
 import Data.Complex
 import Numeric
-import Util.Lists
 
 data Direction = U | R | D | L
     deriving (Show, Read, Eq, Ord)
@@ -36,20 +35,22 @@ parseHexRow row = (directionFromChar c, fst $ head $ readHex ns)
   where
     hex = filter isAlphaNum $ last $ words row
     (ns, c) = (init hex, last hex)
-    directionFromChar char = case char of
-        '0' -> R
-        '1' -> D
-        '2' -> L
-        '3' -> U
-        _ -> error "char cannot become direction"
+
+directionFromChar :: Char -> Direction
+directionFromChar char = case char of
+    '0' -> R
+    '1' -> D
+    '2' -> L
+    '3' -> U
+    _ -> error (char : ": cannot become direction")
 
 -- Common to Part 1 and 2
 
 measureLagoonArea :: [(Direction, Int)] -> Complex Int -> Int
-measureLagoonArea directions start = pickTheorem innerArea perimeter
+measureLagoonArea directions start = totalArea innerArea perimeter
   where
     corners = getCorners directions start
-    perimeter = getPerimeter corners
+    perimeter = getPerimeter directions
     innerArea = shoelace corners
 
 getStep :: Direction -> Int -> Complex Int
@@ -67,18 +68,22 @@ getCorners steps start = scanl step start steps
     step :: Complex Int -> (Direction, Int) -> Complex Int
     step pt (d, i) = getStep d i `add` pt
 
-getPerimeter :: [Complex Int] -> Int
-getPerimeter corners = sum $ distance <$> windows 2 corners
+getPerimeter :: [(Direction, Int)] -> Int
+getPerimeter instructions = sum $ snd <$> instructions
 
-distance :: [Complex Int] -> Int
-distance [r1 :+ i1, r2 :+ i2]
-    | r1 == r2 = abs (i1 - i2)
-    | i1 == i2 = abs (r1 - r2)
-distance _ = error "expecting a list with two complex numbers"
-
+-- Shoelace formula: https://en.wikipedia.org/wiki/Shoelace_formula
 shoelace :: [Complex Int] -> Int
-shoelace (r1 :+ i1 : r2 :+ i2 : xs) = (i2 + i1) * (r2 - r1) + shoelace (r2 :+ i2 : xs)
+shoelace (r1 :+ i1 : r2 :+ i2 : xs) = (i2 + i1) * (r2 - r1) `div` 2 + shoelace (r2 :+ i2 : xs)
 shoelace _ = 0
 
-pickTheorem :: Int -> Int -> Int
-pickTheorem innerArea perimeter = (innerArea + perimeter + 3) `div` 2
+-- Pick's Theorem: https://en.wikipedia.org/wiki/Pick%27s_theorem
+-- A = total area, i = inner area, b = perimeter
+-- A = i + (b/2) - 1
+-- We have A from `shoelace` above, and b from calculating the perimeter, we want i
+-- i = A - (b/2) + 1
+-- Now, we have to add the perimeter back, since the question asks for the entire area
+-- answer = i + b
+-- answer = A - (b/2) + 1 + b
+-- answer = A + (b/2) + 1
+totalArea :: Int -> Int -> Int
+totalArea area perimeter = area + perimeter `div` 2 + 1
