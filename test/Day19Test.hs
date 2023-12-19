@@ -20,4 +20,14 @@ day19Tests =
                 actual <- addAcceptedRatingNumbers "input/day_19.txt"
                 actual @?= 456651
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- countRatingCombinations "example/day_19.txt"
+                actual @?= 167409079868000
+            , testCase "Input" $ do
+                getInput 19
+                actual <- countRatingCombinations "input/day_19.txt"
+                actual @?= 131899818301477
+            ]
         ]
