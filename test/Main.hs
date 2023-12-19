@@ -18,6 +18,7 @@ import Day15Test
 import Day16Test
 import Day17Test
 import Day18Test
+import Day19Test
 
 main :: IO ()
 main = defaultMain tests
@@ -44,4 +45,5 @@ tests =
         , day16Tests
         , day17Tests
         , day18Tests
+        , day19Tests
         ]
