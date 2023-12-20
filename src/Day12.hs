@@ -44,6 +44,18 @@ largeSpringArrangements filename = do
 unfoldRow :: (String, [Int]) -> (String, [Int])
 unfoldRow (spring, springId) = (intercalate "?" $ replicate 5 spring, concat $ replicate 5 springId)
 
+-- Steps
+-- 1. Replace the ? surrounding # if there is only one option
+-- 2. Split (String, [Int]) into multiple subproblems [(String, [Int])]
+-- 3. For each (String, [Int]) subproblem, figure out how many ways
+-- 4. multiply all the sub-ways together
+-- 5. Go through the above and have a global cache
+
+isolateSpringSections :: (String, [Int]) -> (String, [Int])
+isolateSpringSections (spring, springId) = (spring, springId)
+  where
+    candidates = []
+
 -- Input parsing
 
 parseInput :: String -> [(String, [Int])]
