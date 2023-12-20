@@ -13,6 +13,9 @@ day20Tests =
             "Part 1"
             [ testCase "Example" $ do
                 actual <- measurePulses "example/day_20.txt"
-                actual @?= 20114
+                actual @?= 32000000
+            , testCase "Another Example" $ do
+                actual <- measurePulses "example/day_20_part1.txt"
+                actual @?= 11687500
             ]
         ]

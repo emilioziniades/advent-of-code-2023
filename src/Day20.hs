@@ -2,9 +2,11 @@
 
 module Day20 (measurePulses) where
 
+import Data.Bifunctor
 import Data.Char (isAlpha, isSpace)
 import qualified Data.Map as Map
 import Data.Maybe
+import Debug.Trace
 
 type ModuleLabel = String
 
@@ -23,22 +25,26 @@ measurePulses :: FilePath -> IO Int
 measurePulses filename = do
     file <- readFile filename
     let modules = parseInput file
-    print $ processPulses modules [("button", "broadcaster", Low)]
-    print modules
-    print file
-    pure 0
+    let (lows, highs) = broadcastNPulses modules 1000 1
+    print (lows, highs)
+    pure (lows * highs)
 
-processPulses :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> (Int, Int)
-processPulses _ [] = (0, 0)
-processPulses modules ((srcLabel, dstLabel, pulse) : ps) = count `bisum` processPulses newModules newPulses
+processPulses :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> ((Int, Int), Modules)
+-- processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
+processPulses modules [] = ((0, 0), modules)
+processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (processPulses newModules newPulses)
   where
-    count = case pulse of
-        High -> (0, 1)
-        Low -> (1, 0)
-    (Module state dstLabels) = fromJust $ Map.lookup dstLabel modules
-    newState = updateModule dstLabel pulse state
-    newModules = Map.insert dstLabel (Module newState dstLabels) modules
-    newPulses = ps <> processPulse newModules (srcLabel, dstLabel, pulse)
+    increment = case pulse of
+        High -> second (+ 1)
+        Low -> first (+ 1)
+    dstModule = Map.lookup dstLabel modules
+    (newModules, newPulses) = case dstModule of
+        Just (Module state dstLabels) ->
+            let newState = updateModule dstLabel pulse state
+             in ( Map.insert dstLabel (Module newState dstLabels) modules
+                , ps <> processPulse newModules (srcLabel, dstLabel, pulse)
+                )
+        Nothing -> (modules, ps)
 
 processPulse :: Modules -> (ModuleLabel, ModuleLabel, PulseType) -> [(ModuleLabel, ModuleLabel, PulseType)]
 processPulse modules (_, dstLabel, pulse) = makeSignals dstLabel currentModule pulse
@@ -47,18 +53,18 @@ processPulse modules (_, dstLabel, pulse) = makeSignals dstLabel currentModule p
 
 makeSignals :: ModuleLabel -> Module -> PulseType -> [(ModuleLabel, ModuleLabel, PulseType)]
 makeSignals label (Module Broadcaster nextLabels) _ = fmap (label,,Low) nextLabels
-makeSignals label (Module (FlipFlop on) nextLabels) Low = fmap (label,,if on then Low else High) nextLabels
+makeSignals label (Module (FlipFlop on) nextLabels) Low = fmap (label,,if on then High else Low) nextLabels
 makeSignals _ (Module (FlipFlop _) _) High = []
 makeSignals label (Module (Conjunction prevSignals) nextLabels) _
     | all (== High) (Map.elems prevSignals) = fmap (label,,Low) nextLabels
     | otherwise = fmap (label,,High) nextLabels
 
--- broadcastNPulses :: Modules -> Int -> Int -> (Int, Int)
--- broadcastNPulses modules total n
---     | total >= n = signalsCount
---     | otherwise = signalsCount `bimap` broadcastNPulses newModules total (n+1)
-
--- FlipFlop on -> let nextPulse = if pulse == Low then
+broadcastNPulses :: Modules -> Int -> Int -> (Int, Int)
+broadcastNPulses modules total n
+    | n >= total = signalsCount
+    | otherwise = signalsCount `bisum` broadcastNPulses newModules total (n + 1)
+  where
+    (signalsCount, newModules) = processPulses modules [("button", "broadcaster", Low)]
 
 bisum :: (Int, Int) -> (Int, Int) -> (Int, Int)
 bisum (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
@@ -68,8 +74,6 @@ updateModule _ Low (FlipFlop on) = FlipFlop (not on)
 updateModule _ High (FlipFlop on) = FlipFlop on
 updateModule _ _ Broadcaster = Broadcaster
 updateModule srcLabel pulse (Conjunction pulses) = Conjunction (Map.insert srcLabel pulse pulses)
-
--- pulse -> target module -> state update and more pulses
 
 -- Input parsing
 
