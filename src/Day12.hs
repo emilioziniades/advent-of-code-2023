@@ -1,7 +1,6 @@
 module Day12 (springArrangements, largeSpringArrangements) where
 
 import Data.List
-import Debug.Trace
 import Util.Lists
 
 -- Part 1
@@ -51,10 +50,10 @@ unfoldRow (spring, springId) = (intercalate "?" $ replicate 5 spring, concat $ r
 -- 4. multiply all the sub-ways together
 -- 5. Go through the above and have a global cache
 
-isolateSpringSections :: (String, [Int]) -> (String, [Int])
-isolateSpringSections (spring, springId) = (spring, springId)
-  where
-    candidates = []
+-- isolateSpringSections :: (String, [Int]) -> (String, [Int])
+-- isolateSpringSections (spring, springId) = (spring, springId)
+--   where
+--     candidates = []
 
 -- Input parsing
 
