@@ -20,4 +20,10 @@ day12Tests =
                 actual <- springArrangements "input/day_12.txt"
                 actual @?= 7732
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- largeSpringArrangements "example/day_12.txt"
+                actual @?= 525152
+            ]
         ]
