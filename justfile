@@ -1,9 +1,13 @@
+alias d := develop
 alias b := build
 alias t := test
 alias w := watch
 alias l := lint
 
 default: lint build test
+
+develop:
+    nix develop
 
 build opts="":
     cabal build all {{ opts }}
