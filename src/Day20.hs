@@ -13,9 +13,9 @@ type ModuleLabel = String
 type Modules = Map.Map ModuleLabel Module
 
 data ModuleState = Broadcaster | FlipFlop Bool | Conjunction (Map.Map ModuleLabel PulseType)
-    deriving (Show)
+    deriving (Eq, Show)
 
-data Module = Module ModuleState [ModuleLabel]
+data Module = Module {getState :: ModuleState, getDestinationLabels :: [ModuleLabel]}
     deriving (Show)
 
 data PulseType = High | Low
@@ -24,13 +24,13 @@ data PulseType = High | Low
 measurePulses :: FilePath -> IO Int
 measurePulses filename = do
     file <- readFile filename
-    let modules = parseInput file
-    let (lows, highs) = broadcastNPulses modules 1000 1
+    let modules = prepopulateConjunctionModules $ parseInput file
+    let (lows, highs) = broadcastNPulses modules 4
     print (lows, highs)
     pure (lows * highs)
 
 processPulses :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> ((Int, Int), Modules)
--- processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
+processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
 processPulses modules [] = ((0, 0), modules)
 processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (processPulses newModules newPulses)
   where
@@ -56,13 +56,15 @@ makeSignals label (Module Broadcaster nextLabels) _ = fmap (label,,Low) nextLabe
 makeSignals label (Module (FlipFlop on) nextLabels) Low = fmap (label,,if on then High else Low) nextLabels
 makeSignals _ (Module (FlipFlop _) _) High = []
 makeSignals label (Module (Conjunction prevSignals) nextLabels) _
+    | traceShow prevSignals False = undefined
+    | null (Map.elems prevSignals) = fmap (label,,High) nextLabels
     | all (== High) (Map.elems prevSignals) = fmap (label,,Low) nextLabels
     | otherwise = fmap (label,,High) nextLabels
 
-broadcastNPulses :: Modules -> Int -> Int -> (Int, Int)
-broadcastNPulses modules total n
-    | n >= total = signalsCount
-    | otherwise = signalsCount `bisum` broadcastNPulses newModules total (n + 1)
+broadcastNPulses :: Modules -> Int -> (Int, Int)
+broadcastNPulses modules n
+    | n == 0 = signalsCount
+    | otherwise = signalsCount `bisum` broadcastNPulses newModules (n - 1)
   where
     (signalsCount, newModules) = processPulses modules [("button", "broadcaster", Low)]
 
@@ -74,6 +76,29 @@ updateModule _ Low (FlipFlop on) = FlipFlop (not on)
 updateModule _ High (FlipFlop on) = FlipFlop on
 updateModule _ _ Broadcaster = Broadcaster
 updateModule srcLabel pulse (Conjunction pulses) = Conjunction (Map.insert srcLabel pulse pulses)
+
+prepopulateConjunctionModules :: Modules -> Modules
+prepopulateConjunctionModules modules = Map.union (Map.fromList updatedConjunctionModules) modules
+  where
+    conjunctionModules = filter (isConjunction . snd) $ Map.toList modules
+    updatedConjunctionModules = fmap (updateConjunctionModules modules) conjunctionModules
+
+updateConjunctionModules :: Modules -> (ModuleLabel, Module) -> (ModuleLabel, Module)
+updateConjunctionModules modules (l, m) = (l, newM)
+  where
+    sourceModules = Map.fromList $ (,Low) <$> getSourceModules modules l
+    newM = updateConjunctionModuleSources m sourceModules
+
+isConjunction :: Module -> Bool
+isConjunction (Module (Conjunction _) _) = True
+isConjunction _ = False
+
+getSourceModules :: Modules -> ModuleLabel -> [ModuleLabel]
+getSourceModules modules destinationLabel = fst <$> filter (elem destinationLabel . getDestinationLabels . snd) (Map.toList modules)
+
+updateConjunctionModuleSources :: Module -> Map.Map ModuleLabel PulseType -> Module
+updateConjunctionModuleSources (Module (Conjunction _) destinations) newSources = Module (Conjunction newSources) destinations
+updateConjunctionModuleSources _ _ = error "this function only works on conjunction modules"
 
 -- Input parsing
 
