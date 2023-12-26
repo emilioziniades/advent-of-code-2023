@@ -13,7 +13,10 @@ type Cache = Map.Map (String, [Int]) Int
 springArrangements :: FilePath -> IO Int
 springArrangements filename = do
     file <- readFile filename
-    pure $ sum $ springArrangement <$> parseInput file
+    let input = isolateSpringSections <$> parseInput file
+    let (n, _cache) = springArrangements' Map.empty input
+    -- pure $ sum $ springArrangement <$> parseInput file
+    pure n
 
 springArrangement :: (String, [Int]) -> Int
 springArrangement (spring, springId) = length $ filter (== springId) $ getSpringId <$> allPossibleSprings spring
