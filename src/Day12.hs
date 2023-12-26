@@ -85,16 +85,26 @@ isolateSpringSections (spring, springId) = (sureThings, springId)
 
 replaceSureThing :: [Int] -> Int -> String -> String
 replaceSureThing springId i spring
-    | springImpossible = unknownAsEmpty
-    | emptyImpossible = unknownAsSpring
+    | not springPossible = unknownAsEmpty
+    | not emptyPossible = unknownAsSpring
     | otherwise = spring
   where
     unknownAsEmpty = replaceIndex i spring '.'
-    unkownAsEmptyId = getSpringId unknownAsEmpty
     unknownAsSpring = replaceIndex i spring '#'
-    unknownAsSpringId = getSpringId unknownAsSpring
-    springImpossible = maximum unknownAsSpringId > maximum springId
-    emptyImpossible = any (`notElem` springId) unkownAsEmptyId
+    springPossible = isPartialSpringPossible (unknownAsSpring, springId)
+    emptyPossible = isPartialSpringPossible (unknownAsEmpty, springId)
+
+isPartialSpringPossible :: (String, [Int]) -> Bool
+isPartialSpringPossible (spring, springId) = all (`elem` springId) certainSpringId && maximum sketchySpringId <= maximum springId
+  where
+    certainSpringId = getCertainSpringId spring
+    sketchySpringId = getSpringId spring
+
+-- only gets IDs of springs surrounded by '.'
+getCertainSpringId :: String -> [Int]
+getCertainSpringId spring = fmap length $ filter (all (== '#')) $ groupBy areNotFullStops spring
+  where
+    areNotFullStops x y = x /= '.' && y /= '.'
 
 replaceIndex :: Int -> String -> Char -> String
 replaceIndex i spring c = take i spring <> pure c <> drop (i + 1) spring

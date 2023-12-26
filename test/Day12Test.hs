@@ -25,5 +25,9 @@ day12Tests =
             [ testCase "Example" $ do
                 actual <- largeSpringArrangements "example/day_12.txt"
                 actual @?= 525152
+            , testCase "Input" $ do
+                getInput 12
+                actual <- largeSpringArrangements "input/day_12.txt"
+                actual @?= 0
             ]
         ]
