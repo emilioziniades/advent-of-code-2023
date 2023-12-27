@@ -17,67 +17,82 @@ type Node = (Point, Direction, StraightCount)
 type Frontier = PSQ.PSQ Node Int
 type CameFrom = Map.Map Node (Maybe Node)
 type CostSoFar = Map.Map Node Int
-type Goal = Point
 type Grid = Map.Map Point Int
+type NeighbourFn = Node -> [Node]
+type GoalCheckFn = Node -> Bool
+type CostFn = Node -> Int
+type HeuristicFn = Node -> Int
 
 -- Part 1
 
 minimizeHeatLoss :: FilePath -> IO Int
 minimizeHeatLoss filename = do
     file <- readFile filename
-    pure $ findShortestPath file
+    pure $ findShortestPath file getNextNodesCrucible
 
-findShortestPath :: String -> Int
-findShortestPath file = aStar grid endPoint (PSQ.singleton startNode 0) (Map.singleton startNode Nothing) (Map.singleton startNode 0)
+findShortestPath :: String -> (Grid -> NeighbourFn) -> Int
+findShortestPath file neighbourFn =
+    aStar
+        (neighbourFn grid)
+        goalCheckFn
+        costFn
+        heuristicFn
+        (PSQ.singleton startNode 0)
+        (Map.singleton startNode Nothing)
+        (Map.singleton startNode 0)
   where
     rawGrid = lines file
     grid = gridMap (parseGrid file)
     endPoint = Point (length rawGrid - 1) (length (head rawGrid) - 1)
     startNode = (Point 0 0, Right, 0)
+    goalCheckFn = (== endPoint) . fst3
+    costFn = fromJust . (`Map.lookup` grid) . fst3
+    heuristicFn = manhattan endPoint . fst3
 
-aStar :: Grid -> Goal -> Frontier -> CameFrom -> CostSoFar -> Int
-aStar grid endPoint queue cameFrom costSoFar
+aStar :: NeighbourFn -> GoalCheckFn -> CostFn -> HeuristicFn -> Frontier -> CameFrom -> CostSoFar -> Int
+aStar neighbourFn reachedGoal getCost getHeuristic queue cameFrom costSoFar
     | PSQ.null queue = error "queue exhausted before target reached"
-    | fst3 currentNode == endPoint = fromJust $ Map.lookup currentNode costSoFar
-    | otherwise = aStar grid endPoint newQueue newCameFrom newCostSoFar
+    | reachedGoal current = fromJust $ Map.lookup current costSoFar
+    | otherwise = aStar neighbourFn reachedGoal getCost getHeuristic newQueue newCameFrom newCostSoFar
   where
-    (current, restQueue) = fromJust (PSQ.minView queue)
-    currentNode = PSQ.key current
-    nextNodes = filter ((`Map.member` grid) . fst3) $ getNextNodes currentNode
-    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps grid endPoint currentNode) (restQueue, cameFrom, costSoFar) nextNodes
+    (currentBinding, restQueue) = fromJust (PSQ.minView queue)
+    current = PSQ.key currentBinding
+    nexts = neighbourFn current
+    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps current getCost getHeuristic) (restQueue, cameFrom, costSoFar) nexts
 
-updateMaps :: Grid -> Point -> Node -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
-updateMaps grid endPoint current next (frontier, cameFrom, costSoFar)
+updateMaps :: Node -> CostFn -> HeuristicFn -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
+updateMaps current getCost getHeuristic next (frontier, cameFrom, costSoFar)
     | Map.notMember next costSoFar || newCost < existingNewCost = (newFrontier, newCameFrom, newCostSoFar)
     | otherwise = (frontier, cameFrom, costSoFar)
   where
-    nextPoint = fst3 next
-    currentCost = fromJust $ Map.lookup current costSoFar
-    nextCost = fromJust $ Map.lookup nextPoint grid
+    currentCost = fromJust (Map.lookup current costSoFar)
+    nextCost = getCost next
     newCost = currentCost + nextCost
-    priority = newCost + manhattan nextPoint endPoint
-    existingNewCost = fromJust $ Map.lookup next costSoFar
+    priority = newCost + getHeuristic next
+    existingNewCost = fromJust (Map.lookup next costSoFar)
     newFrontier = PSQ.insert next priority frontier
     newCameFrom = Map.insert next (Just current) cameFrom
     newCostSoFar = Map.insert next newCost costSoFar
 
-getNextNodes :: Node -> [Node]
-getNextNodes (Point x y, direction, straightCount)
-    | straightCount >= 2 = case direction of
-        Up -> [left 0, right 0]
-        Right -> [up 0, down 0]
-        Down -> [left 0, right 0]
-        Left -> [up 0, down 0]
-    | otherwise = case direction of
-        Up -> [left 0, up (straightCount + 1), right 0]
-        Right -> [up 0, right (straightCount + 1), down 0]
-        Down -> [left 0, down (straightCount + 1), right 0]
-        Left -> [up 0, left (straightCount + 1), down 0]
+getNextNodesCrucible :: Grid -> Node -> [Node]
+getNextNodesCrucible grid (Point x y, direction, straightCount) = filter ((`Map.member` grid) . fst3) nextNodes
   where
     left = (Point x (y - 1),Left,)
     right = (Point x (y + 1),Right,)
     up = (Point (x - 1) y,Up,)
     down = (Point (x + 1) y,Down,)
+    nextNodes =
+        if straightCount >= 2
+            then case direction of
+                Up -> [left 0, right 0]
+                Right -> [up 0, down 0]
+                Down -> [left 0, right 0]
+                Left -> [up 0, down 0]
+            else case direction of
+                Up -> [left 0, up (straightCount + 1), right 0]
+                Right -> [up 0, right (straightCount + 1), down 0]
+                Down -> [left 0, down (straightCount + 1), right 0]
+                Left -> [up 0, left (straightCount + 1), down 0]
 
 -- Input parsing
 
