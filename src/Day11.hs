@@ -21,6 +21,3 @@ adjustStar expansionFactor expansionRows expansionCols (Point x y) = Point (x + 
   where
     rowExps = length $ takeWhile (< x) expansionRows
     colExps = length $ takeWhile (< y) expansionCols
-
-manhattan :: Point -> Point -> Int
-manhattan (Point x1 y1) (Point x2 y2) = abs (x1 - x2) + abs (y1 - y2)
