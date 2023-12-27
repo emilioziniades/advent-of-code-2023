@@ -20,4 +20,14 @@ day17Tests =
                 actual <- minimizeHeatLoss "input/day_17.txt"
                 actual @?= 886
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Example" $ do
+                actual <- minimizeHeatLossUltra "example/day_17.txt"
+                actual @?= 94
+                -- , testCase "Input" $ do
+                --     getInput 17
+                --     actual <- minimizeHeatLoss "input/day_17.txt"
+                --     actual @?= 886
+            ]
         ]
