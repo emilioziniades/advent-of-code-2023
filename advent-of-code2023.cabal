@@ -51,7 +51,8 @@ library
         directory >= 1.3.7 && < 1.4,
         dotenv >= 0.11.0 && < 0.12,
         req >= 3.13.1 && < 3.14,
-        PSQueue >= 1.2.0 && < 1.3
+        PSQueue >= 1.2.0 && < 1.3,
+        MemoTrie >= 0.6.11 && < 0.7
 
 test-suite advent-of-code2023-test
     import:            warnings

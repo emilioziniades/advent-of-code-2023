@@ -28,6 +28,6 @@ day12Tests =
             , testCase "Input" $ do
                 getInput 12
                 actual <- largeSpringArrangements "input/day_12.txt"
-                actual @?= 0
+                actual @?= 4500070301581
             ]
         ]
