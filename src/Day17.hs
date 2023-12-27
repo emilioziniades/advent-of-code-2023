@@ -6,7 +6,7 @@ import Data.Char (digitToInt)
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 import qualified Data.PSQueue as PSQ
-import Util.Grid (Point (Point), gridMap)
+import Util.Grid (Point (Point), gridMap, manhattan)
 import Prelude hiding (Left, Right)
 
 data Direction = Right | Up | Left | Down
@@ -25,39 +25,29 @@ type Grid = Map.Map Point Int
 minimizeHeatLoss :: FilePath -> IO Int
 minimizeHeatLoss filename = do
     file <- readFile filename
-    let (n, _) = findShortestPath file
-    pure n
+    pure $ findShortestPath file
 
-findShortestPath :: String -> (Int, CameFrom)
-findShortestPath file = runAStar grid startNode endPoint
+findShortestPath :: String -> Int
+findShortestPath file = aStar grid endPoint (PSQ.singleton startNode 0) (Map.singleton startNode Nothing) (Map.singleton startNode 0)
   where
     rawGrid = lines file
     grid = gridMap (parseGrid file)
     endPoint = Point (length rawGrid - 1) (length (head rawGrid) - 1)
     startNode = (Point 0 0, Right, 0)
 
-runAStar :: Grid -> Node -> Goal -> (Int, CameFrom)
-runAStar grid startNode endPoint =
-    aStar
-        grid
-        endPoint
-        (PSQ.singleton startNode 0)
-        (Map.singleton startNode Nothing)
-        (Map.singleton startNode 0)
-
-aStar :: Grid -> Goal -> Frontier -> CameFrom -> CostSoFar -> (Int, CameFrom)
+aStar :: Grid -> Goal -> Frontier -> CameFrom -> CostSoFar -> Int
 aStar grid endPoint queue cameFrom costSoFar
     | PSQ.null queue = error "queue exhausted before target reached"
-    | fst3 currentNode == endPoint = (fromJust $ Map.lookup currentNode costSoFar, cameFrom)
+    | fst3 currentNode == endPoint = fromJust $ Map.lookup currentNode costSoFar
     | otherwise = aStar grid endPoint newQueue newCameFrom newCostSoFar
   where
     (current, restQueue) = fromJust (PSQ.minView queue)
     currentNode = PSQ.key current
     nextNodes = filter ((`Map.member` grid) . fst3) $ getNextNodes currentNode
-    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps grid currentNode) (restQueue, cameFrom, costSoFar) nextNodes
+    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps grid endPoint currentNode) (restQueue, cameFrom, costSoFar) nextNodes
 
-updateMaps :: Grid -> Node -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
-updateMaps grid current next (frontier, cameFrom, costSoFar)
+updateMaps :: Grid -> Point -> Node -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
+updateMaps grid endPoint current next (frontier, cameFrom, costSoFar)
     | Map.notMember next costSoFar || newCost < existingNewCost = (newFrontier, newCameFrom, newCostSoFar)
     | otherwise = (frontier, cameFrom, costSoFar)
   where
@@ -65,8 +55,9 @@ updateMaps grid current next (frontier, cameFrom, costSoFar)
     currentCost = fromJust $ Map.lookup current costSoFar
     nextCost = fromJust $ Map.lookup nextPoint grid
     newCost = currentCost + nextCost
+    priority = newCost + manhattan nextPoint endPoint
     existingNewCost = fromJust $ Map.lookup next costSoFar
-    newFrontier = PSQ.insert next newCost frontier
+    newFrontier = PSQ.insert next priority frontier
     newCameFrom = Map.insert next (Just current) cameFrom
     newCostSoFar = Map.insert next newCost costSoFar
 
