@@ -18,7 +18,6 @@ day17Tests =
             , testCase "Input" $ do
                 getInput 17
                 actual <- minimizeHeatLoss "input/day_17.txt"
-                -- too low: 873, 875
-                actual @?= 0
+                actual @?= 886
             ]
         ]
