@@ -22,13 +22,19 @@ type Goal = Point
 type Grid = Map.Map Point Int
 
 -- Part 1
+-- too low: 875
+-- wrong: 940
 
 minimizeHeatLoss :: FilePath -> IO Int
 minimizeHeatLoss filename = do
     file <- readFile filename
     let (n, cameFrom) = findShortestPath file
-    let path = recreatePath (Point 12 12) cameFrom
-    print $ fromJust <$> reverse path
+    let grid = gridMap (parseGrid file)
+    let (endPoint, _) = Map.findMax grid
+    let path = recreatePath endPoint cameFrom
+    print $ reverse path
+    -- print $ fromJust . (`Map.lookup` grid) <$> path
+    print $ sum $ fromJust . (`Map.lookup` grid) <$> tail path
     pure n
 
 findShortestPath :: String -> (Int, CameFrom)
@@ -54,12 +60,12 @@ aStar :: Grid -> Goal -> Frontier -> CameFrom -> CostSoFar -> (Int, CameFrom)
 aStar grid endPoint queue cameFrom costSoFar
     | PSQ.null queue = error "queue exhausted before target reached"
     | currentPoint == endPoint = (fromJust $ Map.lookup endPoint costSoFar, cameFrom)
-    | otherwise = traceShow current $ aStar grid endPoint newQueue newCameFrom newCostSoFar
+    | otherwise = aStar grid endPoint newQueue newCameFrom newCostSoFar
   where
     (current, restQueue) = fromJust (PSQ.minView queue)
     currentNode = PSQ.key current
     currentPoint = fst3 currentNode
-    nextNodes = filter (\n -> Map.member (fst3 n) grid) $ getNextNodes currentNode
+    nextNodes = filter ((`Map.member` grid) . fst3) $ getNextNodes currentNode
     (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps grid currentNode) (restQueue, cameFrom, costSoFar) nextNodes
 
 updateMaps :: Grid -> Node -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
@@ -68,7 +74,7 @@ updateMaps grid current next (frontier, cameFrom, costSoFar)
     | otherwise = (frontier, cameFrom, costSoFar)
   where
     currentPoint = fst3 current
-    nextPoint = traceShow next $ fst3 next
+    nextPoint = fst3 next
     currentCost = fromJust $ Map.lookup currentPoint costSoFar
     nextCost = fromJust $ Map.lookup nextPoint grid
     newCost = currentCost + nextCost
@@ -79,7 +85,7 @@ updateMaps grid current next (frontier, cameFrom, costSoFar)
 
 getNextNodes :: Node -> [Node]
 getNextNodes (Point x y, direction, straightCount)
-    | straightCount >= 3 = case direction of
+    | straightCount >= 2 = case direction of
         Up -> [left 0, right 0]
         Right -> [up 0, down 0]
         Down -> [left 0, right 0]
@@ -95,10 +101,10 @@ getNextNodes (Point x y, direction, straightCount)
     up = (Point (x - 1) y,Up,)
     down = (Point (x + 1) y,Down,)
 
-recreatePath :: Point -> CameFrom -> [Maybe Point]
+recreatePath :: Point -> CameFrom -> [Point]
 recreatePath currentPoint cameFrom
-    | isNothing prevPoint = []
-    | otherwise = prevPoint : recreatePath (fromJust prevPoint) cameFrom
+    | isNothing prevPoint = [currentPoint]
+    | otherwise = currentPoint : recreatePath (fromJust prevPoint) cameFrom
   where
     prevPoint = fromJust (Map.lookup currentPoint cameFrom)
 
