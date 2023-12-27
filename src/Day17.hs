@@ -7,6 +7,7 @@ import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 import qualified Data.PSQueue as PSQ
 import Util.Grid (Point (Point), gridMap, manhattan)
+import Util.Path
 import Prelude hiding (Left, Right)
 
 data Direction = Right | Up | Left | Down
@@ -14,14 +15,8 @@ data Direction = Right | Up | Left | Down
 
 type StraightCount = Int
 type Node = (Point, Direction, StraightCount)
-type Frontier = PSQ.PSQ Node Int
-type CameFrom = Map.Map Node (Maybe Node)
-type CostSoFar = Map.Map Node Int
 type Grid = Map.Map Point Int
 type NeighbourFn = Node -> [Node]
-type GoalCheckFn = Node -> Bool
-type CostFn = Node -> Int
-type HeuristicFn = Node -> Int
 
 -- Part 1
 
@@ -48,31 +43,6 @@ findShortestPath file neighbourFn =
     goalCheckFn = (== endPoint) . fst3
     costFn = fromJust . (`Map.lookup` grid) . fst3
     heuristicFn = manhattan endPoint . fst3
-
-aStar :: NeighbourFn -> GoalCheckFn -> CostFn -> HeuristicFn -> Frontier -> CameFrom -> CostSoFar -> Int
-aStar neighbourFn reachedGoal getCost getHeuristic queue cameFrom costSoFar
-    | PSQ.null queue = error "queue exhausted before target reached"
-    | reachedGoal current = fromJust $ Map.lookup current costSoFar
-    | otherwise = aStar neighbourFn reachedGoal getCost getHeuristic newQueue newCameFrom newCostSoFar
-  where
-    (currentBinding, restQueue) = fromJust (PSQ.minView queue)
-    current = PSQ.key currentBinding
-    nexts = neighbourFn current
-    (newQueue, newCameFrom, newCostSoFar) = foldr (updateMaps current getCost getHeuristic) (restQueue, cameFrom, costSoFar) nexts
-
-updateMaps :: Node -> CostFn -> HeuristicFn -> Node -> (Frontier, CameFrom, CostSoFar) -> (Frontier, CameFrom, CostSoFar)
-updateMaps current getCost getHeuristic next (frontier, cameFrom, costSoFar)
-    | Map.notMember next costSoFar || newCost < existingNewCost = (newFrontier, newCameFrom, newCostSoFar)
-    | otherwise = (frontier, cameFrom, costSoFar)
-  where
-    currentCost = fromJust (Map.lookup current costSoFar)
-    nextCost = getCost next
-    newCost = currentCost + nextCost
-    priority = newCost + getHeuristic next
-    existingNewCost = fromJust (Map.lookup next costSoFar)
-    newFrontier = PSQ.insert next priority frontier
-    newCameFrom = Map.insert next (Just current) cameFrom
-    newCostSoFar = Map.insert next newCost costSoFar
 
 getNextNodesCrucible :: Grid -> Node -> [Node]
 getNextNodesCrucible grid (Point x y, direction, straightCount) = filter ((`Map.member` grid) . fst3) nextNodes

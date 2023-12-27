@@ -21,6 +21,7 @@ library
         Util.Lists
         Util.Maths
         Util.Grid
+        Util.Path
         Day01
         Day02
         Day03
