@@ -25,9 +25,9 @@ day17Tests =
             [ testCase "Example" $ do
                 actual <- minimizeHeatLossUltra "example/day_17.txt"
                 actual @?= 94
-                -- , testCase "Input" $ do
-                --     getInput 17
-                --     actual <- minimizeHeatLoss "input/day_17.txt"
-                --     actual @?= 886
+            , testCase "Input" $ do
+                getInput 17
+                actual <- minimizeHeatLossUltra "input/day_17.txt"
+                actual @?= 1055
             ]
         ]
