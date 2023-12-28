@@ -15,14 +15,14 @@ type CostFn a = a -> Int
 type HeuristicFn a = a -> Int
 
 aStar :: (Ord a) => NeighbourFn a -> GoalCheckFn a -> CostFn a -> HeuristicFn a -> Frontier a -> CameFrom a -> CostSoFar a -> Int
-aStar neighbourFn reachedGoal getCost getHeuristic queue cameFrom costSoFar
+aStar getNeighbours isAtGoal getCost getHeuristic queue cameFrom costSoFar
     | PSQ.null queue = error "queue exhausted before target reached"
-    | reachedGoal current = fromJust $ Map.lookup current costSoFar
-    | otherwise = aStar neighbourFn reachedGoal getCost getHeuristic newQueue newCameFrom newCostSoFar
+    | isAtGoal current = fromJust $ Map.lookup current costSoFar
+    | otherwise = aStar getNeighbours isAtGoal getCost getHeuristic newQueue newCameFrom newCostSoFar
   where
     (currentBinding, restQueue) = fromJust (PSQ.minView queue)
     current = PSQ.key currentBinding
-    nexts = neighbourFn current
+    nexts = getNeighbours current
     (newQueue, newCameFrom, newCostSoFar) = foldr (updateState current getCost getHeuristic) (restQueue, cameFrom, costSoFar) nexts
 
 updateState :: (Ord a) => a -> CostFn a -> HeuristicFn a -> a -> (Frontier a, CameFrom a, CostSoFar a) -> (Frontier a, CameFrom a, CostSoFar a)
