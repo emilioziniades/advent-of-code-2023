@@ -22,4 +22,11 @@ day20Tests =
                 actual <- measurePulses "input/day_20.txt"
                 actual @?= 825167435
             ]
+        , testGroup
+            "Part 2"
+            [ testCase "Input" $ do
+                getInput 20
+                actual <- broadcastLowRx "input/day_20.txt"
+                actual @?= 0
+            ]
         ]

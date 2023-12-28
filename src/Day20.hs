@@ -1,13 +1,11 @@
 {-# LANGUAGE TupleSections #-}
 
-module Day20 (measurePulses) where
+module Day20 (measurePulses, broadcastLowRx) where
 
 import Data.Bifunctor
 import Data.Char (isAlpha, isSpace)
 import qualified Data.Map as Map
 import Data.Maybe
-
--- import Debug.Trace
 
 type ModuleLabel = String
 
@@ -39,7 +37,6 @@ broadcastNPulses modules n
     bisum x = bimap (+ fst x) (+ snd x)
 
 processPulses :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> ((Int, Int), Modules)
--- processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
 processPulses modules [] = ((0, 0), modules)
 processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (processPulses newModules newPulses)
   where
@@ -54,6 +51,38 @@ processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (proc
                 , ps <> processPulse newModules (srcLabel, dstLabel, pulse)
                 )
         Nothing -> (modules, ps)
+
+-- Part 2
+
+broadcastLowRx :: FilePath -> IO Int
+broadcastLowRx filename = do
+    file <- readFile filename
+    let modules = prepopulateConjunctionModules $ parseInput file
+    pure $ getLowRxPulse modules 1
+
+getLowRxPulse :: Modules -> Int -> Int
+getLowRxPulse modules n
+    | hasLowRxPulse = n
+    | otherwise = getLowRxPulse newModules (n + 1)
+  where
+    (hasLowRxPulse, newModules) = findLowRxPulse modules [("button", "broadcaster", Low)]
+
+findLowRxPulse :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> (Bool, Modules)
+findLowRxPulse modules [] = (False, modules)
+findLowRxPulse modules ((srcLabel, dstLabel, pulse) : ps)
+    | dstLabel == "rx" && pulse == Low = (True, modules)
+    | otherwise = findLowRxPulse newModules newPulses
+  where
+    dstModule = Map.lookup dstLabel modules
+    (newModules, newPulses) = case dstModule of
+        Just (Module state dstLabels) ->
+            let newState = updateModule srcLabel pulse state
+             in ( Map.insert dstLabel (Module newState dstLabels) modules
+                , ps <> processPulse newModules (srcLabel, dstLabel, pulse)
+                )
+        Nothing -> (modules, ps)
+
+-- Common to Part 1 and 2
 
 processPulse :: Modules -> (ModuleLabel, ModuleLabel, PulseType) -> [(ModuleLabel, ModuleLabel, PulseType)]
 processPulse modules (_, dstLabel, pulse) = makeSignals dstLabel currentModule pulse
