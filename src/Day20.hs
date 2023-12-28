@@ -6,7 +6,8 @@ import Data.Bifunctor
 import Data.Char (isAlpha, isSpace)
 import qualified Data.Map as Map
 import Data.Maybe
-import Debug.Trace
+
+-- import Debug.Trace
 
 type ModuleLabel = String
 
@@ -25,12 +26,10 @@ measurePulses :: FilePath -> IO Int
 measurePulses filename = do
     file <- readFile filename
     let modules = prepopulateConjunctionModules $ parseInput file
-    let (lows, highs) = broadcastNPulses modules 4
-    print (lows, highs)
-    pure (lows * highs)
+    pure $ uncurry (*) $ broadcastNPulses modules 1000
 
 processPulses :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> ((Int, Int), Modules)
-processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
+-- processPulses _ ((srcLabel, dstLabel, pulse) : _) | trace (srcLabel <> " -" <> show pulse <> "-> " <> dstLabel) False = undefined
 processPulses modules [] = ((0, 0), modules)
 processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (processPulses newModules newPulses)
   where
@@ -40,7 +39,7 @@ processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (proc
     dstModule = Map.lookup dstLabel modules
     (newModules, newPulses) = case dstModule of
         Just (Module state dstLabels) ->
-            let newState = updateModule dstLabel pulse state
+            let newState = updateModule srcLabel pulse state
              in ( Map.insert dstLabel (Module newState dstLabels) modules
                 , ps <> processPulse newModules (srcLabel, dstLabel, pulse)
                 )
@@ -56,14 +55,13 @@ makeSignals label (Module Broadcaster nextLabels) _ = fmap (label,,Low) nextLabe
 makeSignals label (Module (FlipFlop on) nextLabels) Low = fmap (label,,if on then High else Low) nextLabels
 makeSignals _ (Module (FlipFlop _) _) High = []
 makeSignals label (Module (Conjunction prevSignals) nextLabels) _
-    | traceShow prevSignals False = undefined
     | null (Map.elems prevSignals) = fmap (label,,High) nextLabels
     | all (== High) (Map.elems prevSignals) = fmap (label,,Low) nextLabels
     | otherwise = fmap (label,,High) nextLabels
 
 broadcastNPulses :: Modules -> Int -> (Int, Int)
 broadcastNPulses modules n
-    | n == 0 = signalsCount
+    | n == 1 = signalsCount
     | otherwise = signalsCount `bisum` broadcastNPulses newModules (n - 1)
   where
     (signalsCount, newModules) = processPulses modules [("button", "broadcaster", Low)]
