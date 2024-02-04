@@ -4,8 +4,10 @@ module Day20 (measurePulses, broadcastLowRx) where
 
 import Data.Bifunctor
 import Data.Char (isAlpha, isSpace)
+import Data.Hash
 import qualified Data.Map as Map
 import Data.Maybe
+import Debug.Trace
 
 type ModuleLabel = String
 
@@ -14,11 +16,23 @@ type Modules = Map.Map ModuleLabel Module
 data ModuleState = Broadcaster | FlipFlop Bool | Conjunction (Map.Map ModuleLabel PulseType)
     deriving (Eq, Show)
 
+instance Hashable ModuleState where
+    hash Broadcaster = hashInt 0
+    hash (FlipFlop bool) = combine (hashInt 1) (hash bool)
+    hash (Conjunction srcs) = hash (Map.toAscList srcs)
+
 data Module = Module {getState :: ModuleState, getDestinationLabels :: [ModuleLabel]}
     deriving (Show)
 
+instance Hashable Module where
+    hash (Module state labels) = combine (hash state) (hash labels)
+
 data PulseType = High | Low
     deriving (Eq, Show)
+
+instance Hashable PulseType where
+    hash Low = hashInt 0
+    hash High = hashInt 1
 
 -- Part 1
 
@@ -57,21 +71,24 @@ processPulses modules ((srcLabel, dstLabel, pulse) : ps) = first increment (proc
 broadcastLowRx :: FilePath -> IO Int
 broadcastLowRx filename = do
     file <- readFile filename
-    let modules = prepopulateConjunctionModules $ parseInput file
-    pure $ getLowRxPulse modules 1
+    let modules = (prepopulateConjunctionModules . parseInput) file
+    pure $ getLowRxPulse Map.empty modules 1
 
-getLowRxPulse :: Modules -> Int -> Int
-getLowRxPulse modules n
+getLowRxPulse :: Map.Map Hash Int -> Modules -> Int -> Int
+getLowRxPulse _ modules n | traceShow (n, fingerprint modules) False = undefined
+getLowRxPulse cache modules n
+    | Map.member moduleHash cache = error "hit cycle!"
     | hasLowRxPulse = n
-    | otherwise = getLowRxPulse newModules (n + 1)
+    | otherwise = getLowRxPulse (Map.insert moduleHash n cache) newModules (n + 1)
   where
-    (hasLowRxPulse, newModules) = findLowRxPulse modules [("button", "broadcaster", Low)]
+    (hasLowRxPulse, newModules) = findLowPulse "qt" modules [("button", "broadcaster", Low)]
+    moduleHash = fingerprint modules
 
-findLowRxPulse :: Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> (Bool, Modules)
-findLowRxPulse modules [] = (False, modules)
-findLowRxPulse modules ((srcLabel, dstLabel, pulse) : ps)
-    | dstLabel == "rx" && pulse == Low = (True, modules)
-    | otherwise = findLowRxPulse newModules newPulses
+findLowPulse :: String -> Modules -> [(ModuleLabel, ModuleLabel, PulseType)] -> (Bool, Modules)
+findLowPulse _ modules [] = (False, modules)
+findLowPulse targetModule modules ((srcLabel, dstLabel, pulse) : ps)
+    | dstLabel == targetModule && pulse == Low = (True, modules)
+    | otherwise = findLowPulse targetModule newModules newPulses
   where
     dstModule = Map.lookup dstLabel modules
     (newModules, newPulses) = case dstModule of
@@ -81,6 +98,9 @@ findLowRxPulse modules ((srcLabel, dstLabel, pulse) : ps)
                 , ps <> processPulse newModules (srcLabel, dstLabel, pulse)
                 )
         Nothing -> (modules, ps)
+
+fingerprint :: Modules -> Hash
+fingerprint ms = hash (Map.toAscList ms)
 
 -- Common to Part 1 and 2
 
