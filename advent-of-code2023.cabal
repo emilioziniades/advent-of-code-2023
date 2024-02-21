@@ -43,6 +43,7 @@ library
         Day19
         Day20
         Day21
+        Day22
     hs-source-dirs:   src
     default-language: Haskell2010
     build-depends:
@@ -79,6 +80,7 @@ test-suite advent-of-code2023-test
         Day19Test
         Day20Test
         Day21Test
+        Day22Test
     default-language:  Haskell2010
     type:              exitcode-stdio-1.0
     hs-source-dirs:    test
