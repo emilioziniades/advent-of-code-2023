@@ -9,6 +9,4 @@ quadraticRoots a b c =
     discr = sqrt ((b ** 2) - (4 * a * c))
 
 lcmList :: (Integral a) => [a] -> a
-lcmList (n1 : n2 : ns) = lcmList (lcm n1 n2 : ns)
-lcmList [n] = n
-lcmList [] = error "an empty list has no lcm"
+lcmList = foldr lcm 1
